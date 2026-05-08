@@ -2,379 +2,895 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema Contable Verde</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Instituto TESLAVI - Sistema de Gestión Académica y Pagos</title>
+<!-- Librería para Excel (compatible con Bolivia) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <style>
-:root{
-  --verde-1:#065f46;  /* oscuro */
-  --verde-2:#059669;  /* principal */
-  --verde-3:#10b981;  /* claro */
-  --bg:#ecfdf5;       /* fondo suave */
-}
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-body{margin:0;font-family:Arial;background:var(--bg);}
-header{
-  background:var(--verde-1);
-  color:white;
-  padding:15px;
-  text-align:center;
-}
-.container{padding:20px;}
-.box{
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:20px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
-form{display:grid;gap:10px;}
-input,select,button{
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-button{
-  background:var(--verde-2);
-  color:white;
-  border:none;
-  cursor:pointer;
-}
-button:hover{background:var(--verde-3);}
+  :root {
+    --verde-teslavi-1: #0B3B2F;
+    --verde-teslavi-2: #1E6F5C;
+    --verde-teslavi-3: #289672;
+    --verde-claro: #E6F4F1;
+    --gris-bg: #F5F7F9;
+    --texto-dark: #2C3E50;
+    --texto-light: #FFFFFF;
+    --rojo-error: #DC3545;
+    --azul-info: #0D6EFD;
+    --amarillo-warning: #FFC107;
+  }
 
-table{width:100%;border-collapse:collapse;}
-th,td{border:1px solid #ccc;padding:8px;text-align:left;}
-th{background:#d1fae5;}
+  body {
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    background: var(--gris-bg);
+    color: var(--texto-dark);
+    line-height: 1.6;
+  }
 
-.hidden{display:none;}
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--verde-teslavi-1) 0%, var(--verde-teslavi-2) 100%);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
 
-.loader{
-position:fixed;
-top:0;left:0;
-width:100%;height:100%;
-background:rgba(0,0,0,0.4);
-display:flex;
-align-items:center;
-justify-content:center;
-color:white;
-font-size:20px;
-z-index:999;
-}
+  .header h1 {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .rol-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+  }
+
+  .btn-logout {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+  }
+
+  .btn-logout:hover {
+    background: rgba(255,255,255,0.4);
+    transform: translateY(-2px);
+  }
+
+  /* CONTAINER */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+
+  .card h2 {
+    color: var(--verde-teslavi-1);
+    border-left: 4px solid var(--verde-teslavi-3);
+    padding-left: 0.8rem;
+    margin-bottom: 1.2rem;
+    font-size: 1.3rem;
+  }
+
+  /* FORMS */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  input, select, textarea {
+    padding: 0.7rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--verde-teslavi-3);
+    box-shadow: 0 0 0 3px rgba(40,150,114,0.1);
+  }
+
+  button {
+    padding: 0.7rem 1.2rem;
+    background: var(--verde-teslavi-2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  button:hover {
+    background: var(--verde-teslavi-3);
+    transform: translateY(-1px);
+  }
+
+  button:active {
+    transform: translateY(0);
+  }
+
+  .btn-excel {
+    background: #1F7B4D;
+    margin-left: 0.5rem;
+  }
+
+  .btn-excel:hover {
+    background: #0E5E3A;
+  }
+
+  /* TABLAS */
+  .table-wrapper {
+    overflow-x: auto;
+    margin-top: 1rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  th {
+    background: var(--verde-claro);
+    padding: 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--verde-teslavi-1);
+    border-bottom: 2px solid var(--verde-teslavi-3);
+  }
+
+  td {
+    padding: 0.8rem;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  tr:hover {
+    background: #F9FAFB;
+  }
+
+  /* BUSCADOR */
+  .search-bar {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-bar input {
+    flex: 1;
+    min-width: 200px;
+    max-width: 350px;
+  }
+
+  /* LOGIN */
+  .login-card {
+    max-width: 400px;
+    margin: 3rem auto;
+    text-align: center;
+  }
+
+  .login-card .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* MODAL */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+  }
+
+  .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    animation: modalSlideIn 0.3s ease;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-content input {
+    width: 100%;
+    margin: 1rem 0;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+  }
+
+  /* LOADER */
+  .loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    color: white;
+    font-size: 1.2rem;
+    backdrop-filter: blur(4px);
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255,255,255,0.3);
+    border-top: 5px solid var(--verde-teslavi-3);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2C3E50;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 40px;
+    z-index: 2500;
+    animation: slideInRight 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .toast.success { background: var(--verde-teslavi-2); }
+  .toast.error { background: var(--rojo-error); }
+
+  /* UTILIDADES */
+  .hidden { display: none; }
+  .text-center { text-align: center; }
+  .mt-2 { margin-top: 0.5rem; }
+
+  @media (max-width: 768px) {
+    .header { flex-direction: column; text-align: center; }
+    .card { padding: 1rem; }
+    th, td { font-size: 0.8rem; padding: 0.5rem; }
+    button { width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
-
 <body>
 
-<header>
-<h1>Sistema Contable Institucional</h1>
-<button onclick="logout()">Cerrar sesión</button>
-</header>
+<!-- HEADER -->
+<div class="header">
+  <h1>📚 Instituto TESLAVI</h1>
+  <div class="header-buttons">
+    <span id="rolBadge" class="rol-badge">Cargando...</span>
+    <button class="btn-logout" onclick="logout()">🚪 Cerrar Sesión</button>
+  </div>
+</div>
 
-<div id="loader" class="loader hidden">Procesando...</div>
+<!-- LOADER -->
+<div id="loader" class="loader hidden">
+  <div class="spinner"></div>
+  <div id="loaderMessage">Procesando...</div>
+</div>
 
+<!-- CONTENIDO PRINCIPAL -->
 <div class="container">
+  <!-- LOGIN -->
+  <div id="loginBox" class="card login-card">
+    <h2>🔐 Acceso Instituto TESLAVI</h2>
+    <p style="color: #666; margin-bottom: 1rem;">Ingrese sus credenciales autorizadas</p>
+    <form id="loginForm">
+      <div class="form-grid">
+        <input type="email" id="email" placeholder="correo@teslavi.com" required autocomplete="email">
+        <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password">
+        <button type="submit">✅ Ingresar al Sistema</button>
+      </div>
+      <p id="errorLogin" style="color: var(--rojo-error); font-size: 0.85rem; margin-top: 0.5rem;"></p>
+    </form>
+  </div>
 
-<!-- LOGIN -->
-<div id="loginBox" class="box">
-<h2>Login</h2>
-<form id="loginForm">
-<input type="email" id="email" placeholder="Correo" required>
-<input type="password" id="password" placeholder="Contraseña" required>
-<button type="submit">Ingresar</button>
-</form>
-<p id="error"></p>
+  <!-- DASHBOARD (oculto hasta login) -->
+  <div id="dashboard" class="hidden">
+    
+    <!-- SECCIÓN ADMIN (Registro de estudiantes y pagos) -->
+    <div id="adminSection" class="card">
+      <h2>✏️ Gestión de Estudiantes</h2>
+      <form id="studentForm">
+        <div class="form-grid">
+          <input type="text" id="nombre" placeholder="Nombre *" required>
+          <input type="text" id="apellido" placeholder="Apellido *" required>
+          <input type="text" id="ci" placeholder="Cédula de Identidad * (ej: 12345678)" required>
+          <input type="text" id="celular" placeholder="Celular / Teléfono">
+          <select id="semestre">
+            <option value="1">1er Semestre</option>
+            <option value="2">2do Semestre</option>
+            <option value="3">3er Semestre</option>
+            <option value="4">4to Semestre</option>
+          </select>
+          <select id="turno">
+            <option value="Mañana">Turno Mañana</option>
+            <option value="Noche">Turno Noche</option>
+            <option value="Tarde">Turno Tarde</option>
+          </select>
+          <button type="button" id="btnGuardarEstudiante">💾 Guardar Estudiante</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="pagosAdminSection" class="card">
+      <h2>💰 Registrar Pago de Cuota (Bolivianos - Bs)</h2>
+      <div class="form-grid">
+        <select id="studentSelect">
+          <option value="">-- Seleccione Estudiante --</option>
+        </select>
+        <select id="method">
+          <option value="Efectivo">💵 Efectivo (Bs)</option>
+          <option value="QR">📱 QR / Transferencia</option>
+          <option value="Depósito">🏦 Depósito Bancario</option>
+        </select>
+        <input type="text" id="recibo" placeholder="N° Recibo / Comprobante">
+        <select id="cuota">
+          <option value="Cuota 1">Cuota 1 - Febrero</option>
+          <option value="Cuota 2">Cuota 2 - Marzo</option>
+          <option value="Cuota 3">Cuota 3 - Abril</option>
+          <option value="Cuota 4">Cuota 4 - Mayo</option>
+          <option value="Cuota 5">Cuota 5 - Junio</option>
+          <option value="Total">Pago Total Semestre</option>
+        </select>
+        <input type="number" id="amount" placeholder="Monto en Bs." required step="0.01">
+        <button type="button" id="btnGuardarPago">💾 Registrar Pago</button>
+      </div>
+    </div>
+
+    <!-- TABLA DE ESTUDIANTES CON EXCEL Y BUSCADOR -->
+    <div class="card">
+      <h2>📋 Lista de Estudiantes Registrados
+        <button id="exportEstudiantesBtn" class="btn-excel" style="float: right;">📎 Descargar Excel (Estudiantes)</button>
+      </h2>
+      <div class="search-bar">
+        <input type="text" id="searchEstudiante" placeholder="🔍 Buscar por nombre, apellido o CI...">
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre Completo</th>
+              <th>CI</th>
+              <th>Celular</th>
+              <th>Semestre</th>
+              <th>Turno</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaEstudiantes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABLA DE PAGOS CON EXCEL -->
+    <div class="card">
+      <h2>📄 Historial de Pagos Realizados
+        <button id="exportPagosBtn" class="btn-excel" style="float: right;">📎 Descargar Excel (Pagos)</button>
+      </h2>
+      <div class="search-bar">
+        <input type="text" id="searchPago" placeholder="🔍 Buscar por nombre o CI...">
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>CI</th>
+              <th>Método de Pago</th>
+              <th>Concepto</th>
+              <th>Monto (Bs)</th>
+              <th>Recibo</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tablaPagos"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden">
-
-<!-- ESTUDIANTES -->
-<div class="box" id="adminSection">
-<h2>Registrar / Editar Estudiante</h2>
-
-<form id="studentForm">
-<input type="text" id="nombre" placeholder="Nombre" required>
-<input type="text" id="apellido" placeholder="Apellido" required>
-<input type="text" id="ci" placeholder="CI" required>
-<input type="text" id="celular" placeholder="Celular" required>
-
-<select id="semestre">
-<option value="1">Semestre 1</option>
-<option value="2">Semestre 2</option>
-<option value="3">Semestre 3</option>
-<option value="4">Semestre 4</option>
-</select>
-
-<select id="turno">
-<option value="mañana">Mañana</option>
-<option value="noche">Noche</option>
-</select>
-
-<button type="button" onclick="abrirModal('crear')">Guardar</button>
-</form>
-</div>
-
-<!-- PAGOS -->
-<div class="box">
-<h2>Registrar Pago</h2>
-
-<form id="paymentForm">
-<select id="studentSelect"></select>
-
-<select id="method">
-<option value="efectivo">Efectivo</option>
-<option value="qr">QR</option>
-</select>
-
-<input type="text" id="recibo" placeholder="N° Recibo" required>
-
-<select id="cuota">
-<option value="1">Cuota 1</option>
-<option value="2">Cuota 2</option>
-<option value="3">Cuota 3</option>
-<option value="4">Cuota 4</option>
-<option value="total">Total</option>
-</select>
-
-<input type="number" id="amount" placeholder="Monto" required>
-
-<button type="button" onclick="abrirModal('pago')">Guardar Pago</button>
-</form>
-</div>
-
-<!-- TABLA ESTUDIANTES -->
-<div class="box">
-<h2>Estudiantes</h2>
-<table>
-<thead>
-<tr>
-<th>Nombre</th>
-<th>CI</th>
-<th>Semestre</th>
-<th>Turno</th>
-<th>Acción</th>
-</tr>
-</thead>
-<tbody id="tablaEstudiantes"></tbody>
-</table>
-</div>
-
-<!-- TABLA PAGOS -->
-<div class="box">
-<h2>Pagos</h2>
-<table>
-<thead>
-<tr>
-<th>Nombre</th>
-<th>CI</th>
-<th>Método</th>
-<th>Cuota</th>
-<th>Monto</th>
-</tr>
-</thead>
-<tbody id="tablaPagos"></tbody>
-</table>
-</div>
-
-</div>
-</div>
-
-<!-- MODAL -->
-<div id="authModal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
-<div style="background:white;padding:20px;border-radius:10px;width:300px;">
-<h3>Confirmar Acción</h3>
-<input type="password" id="authPass" placeholder="Contraseña">
-<button onclick="confirmarAccion()">Confirmar</button>
-<button onclick="cerrarModal()">Cancelar</button>
-</div>
+<!-- MODAL DE AUTENTICACIÓN -->
+<div id="authModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>🔒 Autorización Requerida</h3>
+    <p>Por favor, confirme su contraseña para realizar esta operación crítica.</p>
+    <input type="password" id="authPass" placeholder="Su contraseña" autocomplete="off">
+    <div class="modal-buttons">
+      <button id="confirmAuthBtn">Confirmar</button>
+      <button id="cancelAuthBtn" style="background: #95A5A6;">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
+  // Importaciones Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, getDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  // Configuración de Firebase (ya activa)
+  const firebaseConfig = {
+    apiKey: "AIzaSyD1yXl0JdY7LQb3yNjLAUIFSCH5ve-CCrg",
+    authDomain: "registro-teslavi.firebaseapp.com",
+    projectId: "registro-teslavi",
+  };
 
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, getDoc, query, where }
-from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD1yXl0JdY7LQb3yNjLAUIFSCH5ve-CCrg",
-  authDomain: "registro-teslavi.firebaseapp.com",
-  projectId: "registro-teslavi",
-};
+  // Variables globales
+  let rolUsuario = "";
+  let accionPendiente = null;   // 'crear', 'editar', 'pago'
+  let estudianteEditandoId = null;
+  let estudiantesCache = [];
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  // Elementos DOM
+  const loader = document.getElementById('loader');
+  const loaderMsg = document.getElementById('loaderMessage');
+  const showLoader = (msg = "Procesando...") => { loaderMsg.innerText = msg; loader.classList.remove('hidden'); };
+  const hideLoader = () => loader.classList.add('hidden');
+  
+  const showToast = (mensaje, tipo = 'success') => {
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    toast.innerText = mensaje;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  };
 
-let rolUsuario="";
-let accionPendiente=null;
-let estudianteEditando=null;
+  // LOGIN
+  const loginForm = document.getElementById('loginForm');
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    showLoader("Verificando credenciales...");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      hideLoader();
+      showToast("Bienvenido al sistema TESLAVI", "success");
+    } catch (error) {
+      hideLoader();
+      document.getElementById('errorLogin').innerText = "❌ " + error.message;
+      showToast("Error de autenticación: " + error.message, "error");
+    }
+  });
 
-const showLoader=()=>loader.classList.remove("hidden");
-const hideLoader=()=>loader.classList.add("hidden");
+  // Monitoreo de autenticación
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      document.getElementById('loginBox').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      
+      // Obtener rol desde Firestore
+      try {
+        const q = query(collection(db, "usuarios"), where("email", "==", user.email));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          rolUsuario = querySnapshot.docs[0].data().rol;
+        } else {
+          rolUsuario = "visualizador";
+        }
+        // Actualizar badge
+        document.getElementById('rolBadge').innerHTML = rolUsuario === 'admin' ? '👑 Administrador' : '👁️ Visualizador';
+        
+        // Mostrar/Ocultar secciones según rol
+        const adminElements = ['adminSection', 'pagosAdminSection'];
+        if (rolUsuario !== 'admin') {
+          adminElements.forEach(id => document.getElementById(id).classList.add('hidden'));
+        } else {
+          adminElements.forEach(id => document.getElementById(id).classList.remove('hidden'));
+        }
+        
+        // Cargar datos
+        await cargarEstudiantes();
+        await cargarPagos();
+      } catch (err) {
+        showToast("Error al cargar permisos", "error");
+      }
+    } else {
+      document.getElementById('loginBox').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+      estudiantesCache = [];
+    }
+  });
 
-/* LOGIN */
-loginForm.addEventListener("submit", async e=>{
-e.preventDefault();
-try{
-await signInWithEmailAndPassword(auth,email.value,password.value);
-}catch(err){ error.textContent=err.message; }
-});
+  window.logout = async () => {
+    await signOut(auth);
+    showToast("Sesión cerrada correctamente", "success");
+  };
 
-/* SESION */
-onAuthStateChanged(auth, async user=>{
-if(user){
-loginBox.classList.add("hidden");
-dashboard.classList.remove("hidden");
+  // MODAL DE REAUTENTICACIÓN
+  const modal = document.getElementById('authModal');
+  const openModal = (accion) => {
+    if (rolUsuario !== 'admin') {
+      showToast("No tiene permisos de administrador", "error");
+      return false;
+    }
+    accionPendiente = accion;
+    modal.classList.remove('hidden');
+    document.getElementById('authPass').value = '';
+    return true;
+  };
+  
+  document.getElementById('confirmAuthBtn').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    const password = document.getElementById('authPass').value;
+    if (!user || !password) {
+      showToast("Ingrese su contraseña", "error");
+      return;
+    }
+    const credential = EmailAuthProvider.credential(user.email, password);
+    try {
+      await reauthenticateWithCredential(user, credential);
+      modal.classList.add('hidden');
+      
+      // Ejecutar acción pendiente
+      if (accionPendiente === 'crear') await guardarEstudiante();
+      else if (accionPendiente === 'editar') await actualizarEstudiante();
+      else if (accionPendiente === 'pago') await guardarPago();
+      
+      accionPendiente = null;
+    } catch (err) {
+      showToast("Contraseña incorrecta. Operación cancelada.", "error");
+    }
+  });
+  
+  document.getElementById('cancelAuthBtn').addEventListener('click', () => {
+    modal.classList.add('hidden');
+    accionPendiente = null;
+  });
 
-/* obtener rol eficiente */
-const q=query(collection(db,"usuarios"),where("email","==",user.email));
-const snap=await getDocs(q);
-snap.forEach(doc=>rolUsuario=doc.data().rol);
-
-/* restricción */
-if(rolUsuario!=="admin") adminSection.style.display="none";
-
-cargarEstudiantes();
-cargarPagos();
-}else{
-loginBox.classList.remove("hidden");
-dashboard.classList.add("hidden");
-}
-});
-
-window.logout=()=>signOut(auth);
-
-/* MODAL */
-window.abrirModal=(accion)=>{
-if(rolUsuario!=="admin") return alert("Solo administrador");
-accionPendiente=accion;
-authModal.classList.remove("hidden");
-};
-
-window.cerrarModal=()=>authModal.classList.add("hidden");
-
-/* CONFIRMAR */
-window.confirmarAccion=async()=>{
-const user=auth.currentUser;
-const cred=EmailAuthProvider.credential(user.email,authPass.value);
-
-try{
-await reauthenticateWithCredential(user,cred);
-
-if(accionPendiente==="crear") await guardarEstudiante();
-if(accionPendiente==="editar") await actualizarEstudiante();
-if(accionPendiente==="pago") await guardarPago();
-
-cerrarModal();
-}catch{
-alert("Contraseña incorrecta");
-}
-};
-
-/* ESTUDIANTES */
-async function guardarEstudiante(){
-if(ci.value.length<5) return alert("CI inválido");
-
-showLoader();
-await addDoc(collection(db,"students"),{
-nombre:nombre.value,
-apellido:apellido.value,
-ci:ci.value,
-celular:celular.value,
-semestre:semestre.value,
-turno:turno.value
-});
-hideLoader();
-studentForm.reset();
-cargarEstudiantes();
-}
-
-window.editar=(id,data)=>{
-estudianteEditando=id;
-nombre.value=data.nombre;
-apellido.value=data.apellido;
-ci.value=data.ci;
-celular.value=data.celular;
-semestre.value=data.semestre;
-turno.value=data.turno;
-abrirModal("editar");
-};
-
-async function actualizarEstudiante(){
-showLoader();
-await updateDoc(doc(db,"students",estudianteEditando),{
-nombre:nombre.value,
-apellido:apellido.value,
-ci:ci.value,
-celular:celular.value,
-semestre:semestre.value,
-turno:turno.value
-});
-hideLoader();
-cargarEstudiantes();
-}
-
-async function cargarEstudiantes(){
-const snap=await getDocs(collection(db,"students"));
-tablaEstudiantes.innerHTML="";
-studentSelect.innerHTML="";
-
-snap.forEach(docu=>{
-const s=docu.data();
-
-studentSelect.innerHTML+=`<option value="${docu.id}">${s.nombre} ${s.apellido}</option>`;
-
-tablaEstudiantes.innerHTML+=`
-<tr>
-<td>${s.nombre} ${s.apellido}</td>
-<td>${s.ci}</td>
-<td>${s.semestre}</td>
-<td>${s.turno}</td>
-<td>${rolUsuario==="admin"?`<button onclick='editar("${docu.id}",${JSON.stringify(s)})'>Editar</button>`:"—"}</td>
-</tr>`;
-});
-}
-
-/* PAGOS */
-async function guardarPago(){
-const ref=doc(db,"students",studentSelect.value);
-const snap=await getDoc(ref);
-const s=snap.data();
-
-showLoader();
-await addDoc(collection(db,"pagos"),{
-nombre:s.nombre+" "+s.apellido,
-ci:s.ci,
-method:method.value,
-cuota:cuota.value,
-amount:amount.value
-});
-hideLoader();
-
-cargarPagos();
-}
-
-async function cargarPagos(){
-tablaPagos.innerHTML="";
-const snap=await getDocs(collection(db,"pagos"));
-
-snap.forEach(doc=>{
-const p=doc.data();
-tablaPagos.innerHTML+=`
-<tr>
-<td>${p.nombre}</td>
-<td>${p.ci}</td>
-<td>${p.method}</td>
-<td>${p.cuota}</td>
-<td>${p.amount}</td>
-</tr>`;
-});
-}
-
+  // ==================== ESTUDIANTES ====================
+  async function guardarEstudiante() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const ci = document.getElementById('ci').value.trim();
+    const celular = document.getElementById('celular').value.trim();
+    const semestre = document.getElementById('semestre').value;
+    const turno = document.getElementById('turno').value;
+    
+    if (!nombre || !apellido || ci.length < 4) {
+      showToast("Complete todos los campos obligatorios (*)", "error");
+      return;
+    }
+    // Validar CI duplicado
+    const existe = estudiantesCache.find(est => est.ci === ci && (!estudianteEditandoId || est.id !== estudianteEditandoId));
+    if (existe) {
+      showToast(`Ya existe un estudiante con CI ${ci}`, "error");
+      return;
+    }
+    showLoader("Guardando estudiante...");
+    try {
+      await addDoc(collection(db, "students"), {
+        nombre, apellido, ci, celular, semestre, turno,
+        activo: true,
+        creado: Timestamp.now()
+      });
+      showToast("✅ Estudiante registrado exitosamente", "success");
+      limpiarFormEstudiante();
+      await cargarEstudiantes();
+    } catch (err) {
+      showToast("Error al guardar: " + err.message, "error");
+    } finally {
+      hideLoader();
+    }
+  }
+  
+  async function actualizarEstudiante() {
+    if (!estudianteEditandoId) return;
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const ci = document.getElementById('ci').value.trim();
+    const celular = document.getElementById('celular').value.trim();
+    const semestre = document.getElementById('semestre').value;
+    const turno = document.getElementById('turno').value;
+    
+    showLoader("Actualizando datos...");
+    try {
+      await updateDoc(doc(db, "students", estudianteEditandoId), {
+        nombre, apellido, ci, celular, semestre, turno
+      });
+      showToast("✏️ Estudiante actualizado correctamente", "success");
+      limpiarFormEstudiante();
+      await cargarEstudiantes();
+    } catch (err) {
+      showToast("Error al actualizar: " + err.message, "error");
+    } finally {
+      hideLoader();
+    }
+  }
+  
+  window.editarEstudiante = (id, data) => {
+    if (rolUsuario !== 'admin') return showToast("Sin permisos", "error");
+    estudianteEditandoId = id;
+    document.getElementById('nombre').value = data.nombre;
+    document.getElementById('apellido').value = data.apellido;
+    document.getElementById('ci').value = data.ci;
+    document.getElementById('celular').value = data.celular || '';
+    document.getElementById('semestre').value = data.semestre;
+    document.getElementById('turno').value = data.turno;
+    openModal('editar');
+  };
+  
+  function limpiarFormEstudiante() {
+    document.getElementById('studentForm').reset();
+    estudianteEditandoId = null;
+  }
+  
+  async function cargarEstudiantes() {
+    showLoader("Cargando estudiantes...");
+    try {
+      const snapshot = await getDocs(collection(db, "students"));
+      estudiantesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderTablaEstudiantes(estudiantesCache);
+      // Llenar select para pagos
+      const selectEst = document.getElementById('studentSelect');
+      selectEst.innerHTML = '<option value="">-- Seleccione Estudiante --</option>';
+      estudiantesCache.forEach(est => {
+        selectEst.innerHTML += `<option value="${est.id}">${est.nombre} ${est.apellido} - ${est.ci}</option>`;
+      });
+    } catch (err) {
+      showToast("Error cargando estudiantes", "error");
+    } finally {
+      hideLoader();
+    }
+  }
+  
+  function renderTablaEstudiantes(lista) {
+    const tbody = document.getElementById('tablaEstudiantes');
+    tbody.innerHTML = '';
+    if (lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay estudiantes registrados</td></tr>';
+      return;
+    }
+    lista.forEach(est => {
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = `${est.nombre} ${est.apellido}`;
+      row.insertCell(1).innerText = est.ci;
+      row.insertCell(2).innerText = est.celular || '-';
+      row.insertCell(3).innerText = `${est.semestre}° Semestre`;
+      row.insertCell(4).innerText = est.turno;
+      row.insertCell(5).innerHTML = '<span style="background:#D4EDDA; color:#155724; padding:4px 8px; border-radius:12px;">Activo</span>';
+      row.insertCell(6).innerHTML = (rolUsuario === 'admin') ? `<button onclick='editarEstudiante("${est.id}", ${JSON.stringify(est)})'>✏️ Editar</button>` : '---';
+    });
+  }
+  
+  // ==================== PAGOS ====================
+  async function guardarPago() {
+    const studentId = document.getElementById('studentSelect').value;
+    if (!studentId) {
+      showToast("Seleccione un estudiante", "error");
+      return;
+    }
+    const method = document.getElementById('method').value;
+    const recibo = document.getElementById('recibo').value.trim();
+    const cuota = document.getElementById('cuota').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    if (isNaN(amount) || amount <= 0) {
+      showToast("Ingrese un monto válido en Bolivianos", "error");
+      return;
+    }
+    
+    // Obtener datos del estudiante
+    const estudianteRef = doc(db, "students", studentId);
+    const estudianteSnap = await getDoc(estudianteRef);
+    if (!estudianteSnap.exists()) return;
+    const estudiante = estudianteSnap.data();
+    
+    showLoader("Registrando pago...");
+    try {
+      await addDoc(collection(db, "pagos"), {
+        nombre: `${estudiante.nombre} ${estudiante.apellido}`,
+        ci: estudiante.ci,
+        method: method,
+        recibo: recibo || "S/N",
+        cuota: cuota,
+        amount: amount,
+        fecha: Timestamp.now(),
+        estudianteId: studentId
+      });
+      showToast(`💰 Pago registrado: ${cuota} por Bs ${amount.toFixed(2)}`, "success");
+      document.getElementById('recibo').value = '';
+      document.getElementById('amount').value = '';
+      await cargarPagos();
+    } catch (err) {
+      showToast("Error al registrar pago: " + err.message, "error");
+    } finally {
+      hideLoader();
+    }
+  }
+  
+  async function cargarPagos() {
+    try {
+      const q = query(collection(db, "pagos"), orderBy("fecha", "desc"));
+      const snapshot = await getDocs(q);
+      const pagos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderTablaPagos(pagos);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  
+  function renderTablaPagos(pagosList) {
+    const tbody = document.getElementById('tablaPagos');
+    tbody.innerHTML = '';
+    if (pagosList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay pagos registrados</td></tr>';
+      return;
+    }
+    pagosList.forEach(p => {
+      const fecha = p.fecha ? p.fecha.toDate().toLocaleDateString('es-BO') : 'Fecha no disponible';
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = p.nombre;
+      row.insertCell(1).innerText = p.ci;
+      row.insertCell(2).innerText = p.method;
+      row.insertCell(3).innerText = p.cuota;
+      row.insertCell(4).innerHTML = `<strong>Bs ${p.amount.toFixed(2)}</strong>`;
+      row.insertCell(5).innerText = p.recibo;
+      row.insertCell(6).innerText = fecha;
+    });
+  }
+  
+  // ==================== EXPORTAR EXCEL ====================
+  function exportToExcel(data, nombreArchivo) {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte TESLAVI');
+    XLSX.writeFile(wb, `${nombreArchivo}_${new Date().toISOString().slice(0,19)}.xlsx`);
+    showToast(`Archivo ${nombreArchivo} descargado`, "success");
+  }
+  
+  document.getElementById('exportEstudiantesBtn').addEventListener('click', () => {
+    const dataExcel = estudiantesCache.map(est => ({
+      'Nombre Completo': `${est.nombre} ${est.apellido}`,
+      'Cédula Identidad': est.ci,
+      'Celular': est.celular,
+      'Semestre': est.semestre,
+      'Turno': est.turno,
+      'Estado': 'Activo'
+    }));
+    exportToExcel(dataExcel, 'Estudiantes_TESLAVI');
+  });
+  
+  document.getElementById('exportPagosBtn').addEventListener('click', async () => {
+    const snapshot = await getDocs(collection(db, "pagos"));
+    const pagosData = snapshot.docs.map(doc => {
+      const p = doc.data();
+      return {
+        'Estudiante': p.nombre,
+        'CI': p.ci,
+        'Método': p.method,
+        'Concepto': p.cuota,
+        'Monto (Bs)': p.amount,
+        'N° Recibo': p.recibo,
+        'Fecha': p.fecha ? p.fecha.toDate().toLocaleDateString('es-BO') : ''
+      };
+    });
+    exportToExcel(pagosData, 'Pagos_TESLAVI');
+  });
+  
+  // BUSCADORES EN TIEMPO REAL
+  document.getElementById('searchEstudiante').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtrados = estudiantesCache.filter(est => 
+      `${est.nombre} ${est.apellido}`.toLowerCase().includes(term) || 
+      est.ci.includes(term)
+    );
+    renderTablaEstudiantes(filtrados);
+  });
+  
+  document.getElementById('searchPago').addEventListener('input', async (e) => {
+    const term = e.target.value.toLowerCase();
+    const snapshot = await getDocs(collection(db, "pagos"));
+    const todosPagos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const filtrados = todosPagos.filter(p => 
+      p.nombre.toLowerCase().includes(term) || p.ci.includes(term)
+    );
+    renderTablaPagos(filtrados);
+  });
+  
+  // Botones principales
+  document.getElementById('btnGuardarEstudiante').addEventListener('click', () => openModal('crear'));
+  document.getElementById('btnGuardarPago').addEventListener('click', () => openModal('pago'));
+  
+  console.log("✅ Sistema TESLAVI - Versión Bolivia + GitHub Lista");
 </script>
-
 </body>
 </html>
