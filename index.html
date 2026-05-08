@@ -6,93 +6,21 @@
 <title>Sistema Contable Institucional</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
-}
-
-/* HEADER */
-header {
-    background: #1e3a8a;
-    color: white;
-    padding: 15px;
-    text-align: center;
-}
-
-/* CONTENEDORES */
-.container {
-    padding: 20px;
-}
-
-/* LOGIN */
-.login-box {
-    max-width: 400px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-/* FORMULARIOS */
-form {
-    display: grid;
-    gap: 10px;
-}
-
-input, select, button {
-    padding: 10px;
-    font-size: 14px;
-}
-
-button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #1d4ed8;
-}
-
-/* TABLA */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-}
-
-th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background: #e5e7eb;
-}
-
-/* ESTADOS */
-.estado-pagado {
-    color: green;
-    font-weight: bold;
-}
-
-.estado-pendiente {
-    color: orange;
-}
-
-.estado-retirado {
-    color: red;
-}
-
-/* RESPONSIVO */
-@media (max-width: 600px) {
-    table {
-        font-size: 12px;
-    }
-}
+body { margin:0; font-family:Arial; background:#f4f6f9;}
+header { background:#1e3a8a; color:white; padding:15px; text-align:center;}
+.container { padding:20px;}
+.login-box { max-width:400px; margin:auto; background:white; padding:20px; border-radius:10px;}
+form { display:grid; gap:10px;}
+input,select,button{ padding:10px;}
+button{ background:#2563eb; color:white; border:none; cursor:pointer;}
+button:hover{ background:#1d4ed8;}
+table{ width:100%; border-collapse:collapse; background:white;}
+th,td{ border:1px solid #ccc; padding:8px;}
+th{ background:#e5e7eb;}
+.estado-pagado{ color:green; font-weight:bold;}
+.estado-pendiente{ color:orange;}
+.estado-retirado{ color:red;}
+.hidden{ display:none;}
 </style>
 
 </head>
@@ -101,22 +29,20 @@ th {
 
 <header>
 <h1>Sistema Contable Institucional</h1>
+<button onclick="logout()">Cerrar sesión</button>
 </header>
 
+<div class="container">
+
 <!-- LOGIN -->
-<section class="container" aria-labelledby="loginTitle">
-<div class="login-box">
+<div id="loginBox" class="login-box">
+<h2>Inicio de Sesión</h2>
 
-<h2 id="loginTitle">Inicio de Sesión</h2>
+<form id="loginForm">
+<input type="email" id="email" placeholder="Correo" required>
+<input type="password" id="password" placeholder="Contraseña" required>
 
-<form aria-label="Formulario de login">
-<label for="usuario">Usuario</label>
-<input type="text" id="usuario" required>
-
-<label for="password">Contraseña</label>
-<input type="password" id="password" required>
-
-<select aria-label="Tipo de usuario">
+<select id="rol">
 <option value="admin">Administrador</option>
 <option value="visualizador">Visualizador</option>
 </select>
@@ -124,125 +50,149 @@ th {
 <button type="submit">Ingresar</button>
 </form>
 
+<p id="error"></p>
 </div>
-</section>
 
 <!-- DASHBOARD -->
-<section class="container" aria-labelledby="dashboardTitle">
+<div id="dashboard" class="hidden">
 
-<h2 id="dashboardTitle">Dashboard</h2>
+<h2>Registrar Pago</h2>
 
-<!-- FILTROS -->
-<h3>Filtros</h3>
-<form>
-<select>
-<option>Semana</option>
-<option>Mes</option>
-<option>Semestre</option>
-</select>
-</form>
+<form id="paymentForm">
 
-<!-- REGISTRO DE PAGOS -->
-<h3>Registrar Pago</h3>
+<input type="text" id="student" placeholder="Nombre estudiante" required>
 
-<form aria-label="Formulario de pagos">
-
-<label>Estudiante</label>
-<select>
-<option>Juan Perez</option>
-<option>Maria Lopez</option>
+<select id="method">
+<option value="efectivo">Efectivo</option>
+<option value="qr">QR</option>
 </select>
 
-<label>Método de Pago</label>
-<select>
-<option>Efectivo</option>
-<option>QR</option>
+<input type="text" id="recibo" placeholder="N° Recibo" required>
+
+<select id="cuota">
+<option value="1">Cuota 1</option>
+<option value="2">Cuota 2</option>
+<option value="3">Cuota 3</option>
+<option value="4">Cuota 4</option>
+<option value="total">Total</option>
 </select>
 
-<label>Número de Recibo</label>
-<input type="text" placeholder="Ej: 000123">
+<input type="number" id="amount" placeholder="Monto" required>
 
-<label>Cuota</label>
-<select>
-<option>Cuota 1</option>
-<option>Cuota 2</option>
-<option>Cuota 3</option>
-<option>Cuota 4</option>
-<option>Pago Total</option>
-</select>
-
-<label>Monto</label>
-<input type="number" placeholder="Bs.">
-
-<button type="submit">Registrar Pago</button>
+<button type="submit">Guardar Pago</button>
 
 </form>
 
-<!-- TABLA -->
-<h3>Lista de Estudiantes</h3>
+<h2>Pagos Registrados</h2>
 
-<table aria-label="Tabla de estudiantes">
-
+<table>
 <thead>
 <tr>
-<th>Nombre</th>
-<th>CI</th>
-<th>Celular</th>
-<th>Semestre</th>
-<th>Turno</th>
-<th>Estado</th>
+<th>Estudiante</th>
+<th>Método</th>
+<th>Recibo</th>
+<th>Cuota</th>
+<th>Monto</th>
 </tr>
 </thead>
-
-<tbody>
-
-<tr>
-<td>Juan Perez</td>
-<td>12345678</td>
-<td>70000000</td>
-<td>1</td>
-<td>Mañana</td>
-<td class="estado-pagado">Pagado</td>
-</tr>
-
-<tr>
-<td>Maria Lopez</td>
-<td>87654321</td>
-<td>71111111</td>
-<td>2</td>
-<td>Noche</td>
-<td class="estado-pendiente">Pendiente</td>
-</tr>
-
-<tr>
-<td>Carlos Ruiz</td>
-<td>55555555</td>
-<td>72222222</td>
-<td>3</td>
-<td>Mañana</td>
-<td class="estado-retirado">Retirado</td>
-</tr>
-
-</tbody>
-
+<tbody id="tabla"></tbody>
 </table>
 
-<!-- RESUMEN -->
-<h3>Resumen</h3>
+</div>
 
-<ul>
-<li>Total estudiantes: 120</li>
-<li>Pagados: 80</li>
-<li>Pendientes: 30</li>
-<li>Retirados: 10</li>
-<li>Porcentaje de cumplimiento: 66%</li>
-</ul>
+</div>
 
-<!-- EXPORTAR -->
-<h3>Reportes</h3>
-<button>Descargar Excel</button>
+<!-- FIREBASE + LOGICA -->
+<script type="module">
 
-</section>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+import { getFirestore, collection, addDoc, getDocs }
+from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+/* 🔥 TU CONFIG (YA CORRECTA) */
+const firebaseConfig = {
+  apiKey: "AIzaSyD1yXl0JdY7LQb3yNjLAUIFSCH5ve-CCrg",
+  authDomain: "registro-teslavi.firebaseapp.com",
+  projectId: "registro-teslavi",
+  storageBucket: "registro-teslavi.firebasestorage.app",
+  messagingSenderId: "688155102791",
+  appId: "1:688155102791:web:3c7dc218c07c744d75ab62"
+};
+
+/* INICIALIZAR */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* LOGIN */
+loginForm.addEventListener("submit", async (e)=>{
+e.preventDefault();
+
+try{
+await signInWithEmailAndPassword(auth, email.value, password.value);
+}catch(err){
+error.textContent = "Error: " + err.message;
+}
+});
+
+/* SESION */
+onAuthStateChanged(auth, user=>{
+if(user){
+loginBox.classList.add("hidden");
+dashboard.classList.remove("hidden");
+cargarPagos();
+}else{
+loginBox.classList.remove("hidden");
+dashboard.classList.add("hidden");
+}
+});
+
+/* LOGOUT */
+window.logout = ()=> signOut(auth);
+
+/* REGISTRAR PAGO */
+paymentForm.addEventListener("submit", async (e)=>{
+e.preventDefault();
+
+await addDoc(collection(db,"pagos"),{
+student: student.value,
+method: method.value,
+recibo: recibo.value,
+cuota: cuota.value,
+amount: amount.value,
+fecha: new Date()
+});
+
+alert("Pago guardado");
+paymentForm.reset();
+cargarPagos();
+});
+
+/* CARGAR TABLA */
+async function cargarPagos(){
+tabla.innerHTML = "";
+
+const datos = await getDocs(collection(db,"pagos"));
+
+datos.forEach(doc=>{
+const d = doc.data();
+
+tabla.innerHTML += `
+<tr>
+<td>${d.student}</td>
+<td>${d.method}</td>
+<td>${d.recibo}</td>
+<td>${d.cuota}</td>
+<td>${d.amount}</td>
+</tr>
+`;
+});
+}
+
+</script>
 
 </body>
 </html>
