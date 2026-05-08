@@ -3,24 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema Contable Institucional</title>
+<title>Sistema Contable</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#f4f6f9;}
-header { background:#1e3a8a; color:white; padding:15px; text-align:center;}
-.container { padding:20px;}
-.login-box { max-width:400px; margin:auto; background:white; padding:20px; border-radius:10px;}
-form { display:grid; gap:10px;}
-input,select,button{ padding:10px;}
-button{ background:#2563eb; color:white; border:none; cursor:pointer;}
-button:hover{ background:#1d4ed8;}
-table{ width:100%; border-collapse:collapse; background:white;}
-th,td{ border:1px solid #ccc; padding:8px;}
-th{ background:#e5e7eb;}
-.estado-pagado{ color:green; font-weight:bold;}
-.estado-pendiente{ color:orange;}
-.estado-retirado{ color:red;}
-.hidden{ display:none;}
+body{margin:0;font-family:Arial;background:#f4f6f9;}
+header{background:#1e3a8a;color:white;padding:15px;text-align:center;}
+.container{padding:20px;}
+.box{background:white;padding:20px;border-radius:10px;margin-bottom:20px;}
+form{display:grid;gap:10px;}
+input,select,button{padding:10px;}
+button{background:#2563eb;color:white;border:none;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #ccc;padding:8px;}
+.hidden{display:none;}
 </style>
 
 </head>
@@ -35,18 +30,12 @@ th{ background:#e5e7eb;}
 <div class="container">
 
 <!-- LOGIN -->
-<div id="loginBox" class="login-box">
-<h2>Inicio de Sesión</h2>
+<div id="loginBox" class="box">
+<h2>Login</h2>
 
 <form id="loginForm">
 <input type="email" id="email" placeholder="Correo" required>
 <input type="password" id="password" placeholder="Contraseña" required>
-
-<select id="rol">
-<option value="admin">Administrador</option>
-<option value="visualizador">Visualizador</option>
-</select>
-
 <button type="submit">Ingresar</button>
 </form>
 
@@ -56,11 +45,41 @@ th{ background:#e5e7eb;}
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
+<!-- ESTUDIANTES -->
+<div class="box" id="adminSection">
+
+<h2>Registrar / Editar Estudiante</h2>
+
+<form id="studentForm">
+<input type="text" id="nombre" placeholder="Nombre" required>
+<input type="text" id="apellido" placeholder="Apellido" required>
+<input type="text" id="ci" placeholder="CI" required>
+<input type="text" id="celular" placeholder="Celular" required>
+
+<select id="semestre">
+<option value="1">Semestre 1</option>
+<option value="2">Semestre 2</option>
+<option value="3">Semestre 3</option>
+<option value="4">Semestre 4</option>
+</select>
+
+<select id="turno">
+<option value="mañana">Mañana</option>
+<option value="noche">Noche</option>
+</select>
+
+<button type="button" onclick="abrirModal('crear')">Guardar</button>
+
+</form>
+
+</div>
+
+<!-- PAGOS -->
+<div class="box">
 <h2>Registrar Pago</h2>
 
 <form id="paymentForm">
-
-<input type="text" id="student" placeholder="Nombre estudiante" required>
+<select id="studentSelect"></select>
 
 <select id="method">
 <option value="efectivo">Efectivo</option>
@@ -79,71 +98,126 @@ th{ background:#e5e7eb;}
 
 <input type="number" id="amount" placeholder="Monto" required>
 
-<button type="submit">Guardar Pago</button>
-
+<button type="button" onclick="abrirModal('pago')">Guardar Pago</button>
 </form>
 
-<h2>Pagos Registrados</h2>
+</div>
+
+<!-- LISTA -->
+<div class="box">
+<h2>Estudiantes</h2>
 
 <table>
 <thead>
 <tr>
-<th>Estudiante</th>
+<th>Nombre</th>
+<th>CI</th>
+<th>Semestre</th>
+<th>Turno</th>
+<th>Acción</th>
+</tr>
+</thead>
+<tbody id="tablaEstudiantes"></tbody>
+</table>
+
+</div>
+
+<!-- PAGOS -->
+<div class="box">
+<h2>Pagos</h2>
+
+<table>
+<thead>
+<tr>
+<th>Nombre</th>
+<th>CI</th>
 <th>Método</th>
-<th>Recibo</th>
 <th>Cuota</th>
 <th>Monto</th>
 </tr>
 </thead>
-<tbody id="tabla"></tbody>
+<tbody id="tablaPagos"></tbody>
 </table>
 
 </div>
 
 </div>
 
-<!-- FIREBASE + LOGICA -->
+</div>
+
+<!-- MODAL SEGURIDAD -->
+<div id="authModal" class="hidden" style="
+position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;
+">
+
+<div style="background:white; padding:20px; border-radius:10px; width:300px;">
+<h3>Confirmar Usuario</h3>
+<input type="email" id="authEmail" placeholder="Correo">
+<input type="password" id="authPass" placeholder="Contraseña">
+<button onclick="confirmarAccion()">Confirmar</button>
+<button onclick="cerrarModal()">Cancelar</button>
+</div>
+
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential }
 from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
-import { getFirestore, collection, addDoc, getDocs }
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-/* 🔥 TU CONFIG (YA CORRECTA) */
+/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyD1yXl0JdY7LQb3yNjLAUIFSCH5ve-CCrg",
   authDomain: "registro-teslavi.firebaseapp.com",
   projectId: "registro-teslavi",
-  storageBucket: "registro-teslavi.firebasestorage.app",
-  messagingSenderId: "688155102791",
-  appId: "1:688155102791:web:3c7dc218c07c744d75ab62"
 };
 
-/* INICIALIZAR */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* VARIABLES */
+let rolUsuario = "";
+let accionPendiente = null;
+let estudianteEditando = null;
+
 /* LOGIN */
 loginForm.addEventListener("submit", async (e)=>{
 e.preventDefault();
-
 try{
 await signInWithEmailAndPassword(auth, email.value, password.value);
 }catch(err){
-error.textContent = "Error: " + err.message;
+error.textContent = err.message;
 }
 });
 
 /* SESION */
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth, async user=>{
 if(user){
 loginBox.classList.add("hidden");
 dashboard.classList.remove("hidden");
+
+/* OBTENER ROL */
+const snap = await getDocs(collection(db,"usuarios"));
+snap.forEach(doc=>{
+if(doc.data().email === user.email){
+rolUsuario = doc.data().rol;
+}
+});
+
+/* RESTRICCION */
+if(rolUsuario !== "admin"){
+adminSection.style.display = "none";
+}
+
+cargarEstudiantes();
 cargarPagos();
+
 }else{
 loginBox.classList.remove("hidden");
 dashboard.classList.add("hidden");
@@ -153,42 +227,143 @@ dashboard.classList.add("hidden");
 /* LOGOUT */
 window.logout = ()=> signOut(auth);
 
-/* REGISTRAR PAGO */
-paymentForm.addEventListener("submit", async (e)=>{
-e.preventDefault();
+/* MODAL */
+window.abrirModal = (accion)=>{
+if(rolUsuario !== "admin") return alert("Solo administrador");
+
+accionPendiente = accion;
+authModal.classList.remove("hidden");
+};
+
+window.cerrarModal = ()=> authModal.classList.add("hidden");
+
+/* CONFIRMACION */
+window.confirmarAccion = async ()=>{
+const user = auth.currentUser;
+
+const cred = EmailAuthProvider.credential(
+authEmail.value,
+authPass.value
+);
+
+try{
+await reauthenticateWithCredential(user, cred);
+
+if(accionPendiente === "crear") guardarEstudiante();
+if(accionPendiente === "editar") actualizarEstudiante();
+if(accionPendiente === "pago") guardarPago();
+
+cerrarModal();
+
+}catch{
+alert("Credenciales incorrectas");
+}
+};
+
+/* ESTUDIANTE */
+async function guardarEstudiante(){
+await addDoc(collection(db,"students"),{
+nombre:nombre.value,
+apellido:apellido.value,
+ci:ci.value,
+celular:celular.value,
+semestre:semestre.value,
+turno:turno.value
+});
+alert("Guardado");
+studentForm.reset();
+cargarEstudiantes();
+}
+
+window.editar = (id,data)=>{
+estudianteEditando = id;
+nombre.value = data.nombre;
+apellido.value = data.apellido;
+ci.value = data.ci;
+celular.value = data.celular;
+semestre.value = data.semestre;
+turno.value = data.turno;
+abrirModal("editar");
+};
+
+async function actualizarEstudiante(){
+const ref = doc(db,"students",estudianteEditando);
+await updateDoc(ref,{
+nombre:nombre.value,
+apellido:apellido.value,
+ci:ci.value,
+celular:celular.value,
+semestre:semestre.value,
+turno:turno.value
+});
+alert("Actualizado");
+cargarEstudiantes();
+}
+
+/* CARGAR ESTUDIANTES */
+async function cargarEstudiantes(){
+const snap = await getDocs(collection(db,"students"));
+
+studentSelect.innerHTML="";
+tablaEstudiantes.innerHTML="";
+
+snap.forEach(docu=>{
+const s = docu.data();
+
+studentSelect.innerHTML += `<option value="${docu.id}">
+${s.nombre} ${s.apellido}
+</option>`;
+
+tablaEstudiantes.innerHTML += `
+<tr>
+<td>${s.nombre} ${s.apellido}</td>
+<td>${s.ci}</td>
+<td>${s.semestre}</td>
+<td>${s.turno}</td>
+<td>
+${rolUsuario==="admin" ? `<button onclick='editar("${docu.id}", ${JSON.stringify(s)})'>Editar</button>` : "—"}
+</td>
+</tr>`;
+});
+}
+
+/* PAGOS */
+async function guardarPago(){
+const id = studentSelect.value;
+const snap = await getDocs(collection(db,"students"));
+
+let s;
+snap.forEach(doc=>{
+if(doc.id===id){ s=doc.data();}
+});
 
 await addDoc(collection(db,"pagos"),{
-student: student.value,
-method: method.value,
-recibo: recibo.value,
-cuota: cuota.value,
-amount: amount.value,
-fecha: new Date()
+nombre:s.nombre+" "+s.apellido,
+ci:s.ci,
+method:method.value,
+cuota:cuota.value,
+amount:amount.value
 });
 
 alert("Pago guardado");
-paymentForm.reset();
 cargarPagos();
-});
+}
 
-/* CARGAR TABLA */
 async function cargarPagos(){
-tabla.innerHTML = "";
+tablaPagos.innerHTML="";
+const snap = await getDocs(collection(db,"pagos"));
 
-const datos = await getDocs(collection(db,"pagos"));
+snap.forEach(doc=>{
+const p = doc.data();
 
-datos.forEach(doc=>{
-const d = doc.data();
-
-tabla.innerHTML += `
+tablaPagos.innerHTML += `
 <tr>
-<td>${d.student}</td>
-<td>${d.method}</td>
-<td>${d.recibo}</td>
-<td>${d.cuota}</td>
-<td>${d.amount}</td>
-</tr>
-`;
+<td>${p.nombre}</td>
+<td>${p.ci}</td>
+<td>${p.method}</td>
+<td>${p.cuota}</td>
+<td>${p.amount}</td>
+</tr>`;
 });
 }
 
