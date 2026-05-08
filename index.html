@@ -1,819 +1,1038 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Instituto TESLAVI - Sistema Completo</title>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --verde-1: #0B3B2F;
-    --verde-2: #1E6F5C;
-    --verde-3: #289672;
-    --gris-bg: #F5F7F9;
-    --rojo: #DC3545;
-    --azul: #0D6EFD;
-    --naranja: #FD7E14;
-  }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gris-bg); }
-  .header {
-    background: linear-gradient(135deg, var(--verde-1), var(--verde-2));
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .header h1 { font-size: 1.5rem; }
-  .btn-logout {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    color: white;
-    cursor: pointer;
-  }
-  .container { max-width: 1600px; margin: 0 auto; padding: 1.5rem; }
-  .card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  .card h2 {
-    border-left: 4px solid var(--verde-3);
-    padding-left: 0.8rem;
-    margin-bottom: 1rem;
-  }
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-  input, select, button, textarea {
-    padding: 0.7rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 0.9rem;
-  }
-  button {
-    background: var(--verde-2);
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.2s;
-  }
-  button:hover { background: var(--verde-3); transform: scale(1.02); }
-  .btn-danger { background: var(--rojo); }
-  .btn-danger:hover { background: #c82333; }
-  .btn-warning { background: var(--naranja); }
-  .btn-info { background: var(--azul); }
-  .table-wrapper { overflow-x: auto; margin-top: 0.5rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-  th, td { padding: 0.7rem; text-align: left; border-bottom: 1px solid #ddd; }
-  th { background: #E6F4F1; position: sticky; top: 0; }
-  tr:hover { background: #f8f9fa; }
-  .search-bar { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
-  .search-bar input { flex: 1; min-width: 200px; }
-  .hidden { display: none; }
-  .loader {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    color: white;
-    font-size: 1.2rem;
-    flex-direction: column;
-  }
-  .spinner { width: 40px; height: 40px; border: 4px solid white; border-top: 4px solid var(--verde-3); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 1rem; }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  .toast {
-    position: fixed;
-    bottom: 20px; right: 20px;
-    background: #2C3E50;
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border-radius: 30px;
-    z-index: 1100;
-    animation: slideIn 0.3s ease;
-  }
-  .toast.error { background: var(--rojo); }
-  .toast.success { background: var(--verde-2); }
-  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-  .modal {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-  }
-  .modal-content {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .modal-content h3 { margin-bottom: 1rem; }
-  .rol-badge {
-    background: rgba(255,255,255,0.2);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    margin-right: 1rem;
-  }
-  .cuota-pagada {
-    background: #D4EDDA;
-    color: #155724;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-  }
-  .cuota-pendiente {
-    background: #F8D7DA;
-    color: #721C24;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-  }
-  .badge-success { background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
-  .badge-warning { background: #ffc107; color: black; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
-  .financiero-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px;
-    padding: 0.8rem;
-    margin-top: 0.5rem;
-  }
-  @media (max-width: 768px) {
-    .header { flex-direction: column; gap: 0.5rem; text-align: center; }
-    .form-grid { grid-template-columns: 1fr; }
-    th, td { font-size: 0.75rem; padding: 0.4rem; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Instituto TESLAVI | Gestión Académica y Financiera</title>
+    <!-- SheetJS para Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #0B3B2F;
+            --primary: #1E6F5C;
+            --primary-light: #289672;
+            --primary-bg: #E6F4F1;
+            --gray-bg: #F8F9FA;
+            --danger: #DC3545;
+            --danger-dark: #A71D2A;
+            --warning: #FD7E14;
+            --info: #0D6EFD;
+            --success: #198754;
+            --text-dark: #212529;
+            --text-muted: #6C757D;
+            --border: #DEE2E6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--gray-bg);
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+            border-left: 4px solid var(--primary-light);
+            padding-left: 1rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.3rem;
+            color: var(--primary-dark);
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        input, select, button {
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(40, 150, 114, 0.1);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+        .btn-danger:hover {
+            background: var(--danger-dark);
+        }
+        .btn-warning {
+            background: var(--warning);
+        }
+        .btn-info {
+            background: var(--info);
+        }
+        .btn-sm {
+            padding: 0.3rem 0.7rem;
+            font-size: 0.8rem;
+        }
+
+        /* Tablas */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--primary-bg);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #F1F3F5;
+        }
+
+        /* Badges */
+        .badge-success {
+            background: #D4EDDA;
+            color: #155724;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .badge-warning {
+            background: #FFF3CD;
+            color: #856404;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+        }
+        .badge-danger {
+            background: #F8D7DA;
+            color: #721C24;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+        }
+        .badge-info {
+            background: #D1ECF1;
+            color: #0C5460;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+        }
+
+        /* Buscador */
+        .search-bar {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-bar input {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: white;
+            padding: 1.8rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Loader y Toasts */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            flex-direction: column;
+            gap: 1rem;
+            color: white;
+        }
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--primary-light);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #2C3E50;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            z-index: 2500;
+            animation: slideIn 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--info); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .hidden { display: none; }
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .font-bold { font-weight: 600; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .card-header { flex-direction: column; align-items: start; gap: 0.5rem; }
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { padding: 0.5rem; font-size: 0.75rem; }
+        }
+    </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>📚 Instituto TESLAVI - Gestión Académica</h1>
-  <div>
-    <span id="rolBadge" class="rol-badge">🔵 Cargando...</span>
-    <button class="btn-logout" onclick="logout()">🚪 Cerrar Sesión</button>
-  </div>
+    <h1>📚 Instituto TESLAVI · Gestión Completa</h1>
+    <div class="header-actions">
+        <span id="roleBadge" class="role-badge">🔵 Cargando...</span>
+        <button class="btn-logout" id="logoutBtn">🚪 Cerrar Sesión</button>
+    </div>
 </div>
 
 <div id="loader" class="loader hidden">
-  <div class="spinner"></div>
-  <div>Procesando...</div>
+    <div class="spinner"></div>
+    <div>Cargando datos...</div>
 </div>
 
 <div class="container">
-  <!-- LOGIN -->
-  <div id="loginBox" class="card" style="max-width: 450px; margin: 2rem auto;">
-    <h2>🔐 Acceso Instituto TESLAVI</h2>
-    <form id="loginForm">
-      <div class="form-grid">
-        <input type="email" id="email" placeholder="Correo electrónico" required>
-        <input type="password" id="password" placeholder="Contraseña" required>
-        <button type="submit">Ingresar al Sistema</button>
-      </div>
-      <p id="errorLogin" style="color: red; margin-top: 0.8rem;"></p>
-    </form>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="hidden">
-    
-    <!-- SECCIÓN ADMIN - Registrar Estudiante -->
-    <div id="adminSection" class="card">
-      <h2>✏️ Registrar Nuevo Estudiante</h2>
-      <div class="form-grid">
-        <input type="text" id="nombre" placeholder="Nombre *">
-        <input type="text" id="apellido" placeholder="Apellido *">
-        <input type="text" id="ci" placeholder="Cédula Identidad *">
-        <input type="text" id="celular" placeholder="Celular">
-        <select id="semestre">
-          <option value="1">1er Semestre</option>
-          <option value="2">2do Semestre</option>
-          <option value="3">3er Semestre</option>
-          <option value="4">4to Semestre</option>
-        </select>
-        <select id="turno">
-          <option value="Mañana">Mañana</option>
-          <option value="Tarde">Tarde</option>
-          <option value="Noche">Noche</option>
-        </select>
-        <input type="number" id="montoTotal" placeholder="Monto total del semestre (Bs)" step="0.01">
-        <button id="btnGuardarEstudiante" class="btn-info">💾 Guardar Estudiante</button>
-      </div>
+    <!-- Login -->
+    <div id="loginCard" class="card" style="max-width: 450px; margin: 2rem auto;">
+        <h2 style="margin-bottom: 1rem;">🔐 Acceso Instituto TESLAVI</h2>
+        <form id="loginForm">
+            <div class="form-grid" style="grid-template-columns: 1fr;">
+                <input type="email" id="loginEmail" placeholder="correo@teslavi.com" required autocomplete="email">
+                <input type="password" id="loginPassword" placeholder="Contraseña" required autocomplete="current-password">
+                <button type="submit">Ingresar al Sistema</button>
+            </div>
+            <p id="loginError" style="color: var(--danger); margin-top: 0.8rem; font-size: 0.85rem;"></p>
+        </form>
     </div>
 
-    <!-- BUSCADOR GLOBAL -->
-    <div class="card">
-      <h2>🔍 Buscador Rápido</h2>
-      <div class="search-bar">
-        <input type="text" id="buscadorGlobal" placeholder="Buscar por nombre, apellido, CI o celular...">
-        <button id="btnLimpiarBusqueda">Limpiar</button>
-      </div>
-    </div>
+    <!-- Dashboard (oculto hasta login) -->
+    <div id="dashboard" class="hidden">
+        
+        <!-- Sección solo visible para Admin -->
+        <div id="adminSection" class="card">
+            <div class="card-header">
+                <h2>✏️ Registrar Nuevo Estudiante</h2>
+            </div>
+            <div class="form-grid">
+                <input type="text" id="nombre" placeholder="Nombre *">
+                <input type="text" id="apellido" placeholder="Apellido *">
+                <input type="text" id="ci" placeholder="Cédula Identidad *">
+                <input type="text" id="celular" placeholder="Celular">
+                <select id="semestre">
+                    <option value="1">1er Semestre</option>
+                    <option value="2">2do Semestre</option>
+                    <option value="3">3er Semestre</option>
+                    <option value="4">4to Semestre</option>
+                </select>
+                <select id="turno">
+                    <option value="Mañana">Turno Mañana</option>
+                    <option value="Tarde">Turno Tarde</option>
+                    <option value="Noche">Turno Noche</option>
+                </select>
+                <input type="number" id="montoTotal" placeholder="Monto total del semestre (Bs)" step="0.01" value="2000">
+                <button id="saveStudentBtn" class="btn-info">💾 Guardar Estudiante</button>
+            </div>
+        </div>
 
-    <!-- TABLA ESTUDIANTES CON FINANZAS -->
-    <div class="card">
-      <h2>📋 Lista de Estudiantes y Finanzas</h2>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>Estudiante</th><th>CI</th><th>Celular</th><th>Semestre</th><th>Turno</th><th>Total a pagar</th><th>Pagado</th><th>Saldo</th><th>Cuotas</th><th>Acciones</th</thead>
-          </thead>
-          <tbody id="tablaEstudiantes">
-            <tr><td colspan="10" style="text-align: center;">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+        <!-- Buscador Global -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🔍 Buscador de Estudiantes</h2>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="globalSearch" placeholder="Buscar por nombre, apellido, CI o celular...">
+                <button id="clearSearchBtn" class="btn-warning">Limpiar</button>
+            </div>
+        </div>
 
-    <!-- REGISTRO DE PAGO -->
-    <div id="pagosAdminSection" class="card">
-      <h2>💰 Registrar Pago de Cuota</h2>
-      <div class="form-grid">
-        <select id="studentSelectPago">
-          <option value="">-- Seleccione Estudiante --</option>
-        </select>
-        <select id="cuotaSelect">
-          <option value="">-- Seleccione Cuota --</option>
-        </select>
-        <select id="method">
-          <option value="Efectivo">💵 Efectivo (Bs)</option>
-          <option value="QR">📱 QR / Transferencia</option>
-          <option value="Depósito">🏦 Depósito Bancario</option>
-        </select>
-        <input type="text" id="recibo" placeholder="N° Recibo / Comprobante">
-        <input type="number" id="montoPago" placeholder="Monto a pagar (Bs)" step="0.01">
-        <input type="datetime-local" id="fechaPago" step="1">
-        <button id="btnGuardarPago" class="btn-info">💾 Registrar Pago</button>
-      </div>
-      <div id="infoDeuda" style="margin-top: 1rem; padding: 0.8rem; background: #e9ecef; border-radius: 8px; display: none;"></div>
-    </div>
+        <!-- Tabla de Estudiantes con Finanzas -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Estudiantes y Estado Financiero</h2>
+                <button id="exportStudentsBtn" class="btn-info btn-sm">📎 Exportar Excel</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="studentsTable">
+                    <thead>
+                        <tr><th>Estudiante</th><th>CI</th><th>Celular</th><th>Semestre</th><th>Turno</th><th>Total (Bs)</th><th>Pagado (Bs)</th><th>Saldo (Bs)</th><th>Cuotas Pagadas</th><th>Acciones</th</thead>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <tr><td colspan="10" class="text-center">Cargando estudiantes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-    <!-- HISTORIAL DE PAGOS -->
-    <div class="card">
-      <h2>📄 Historial de Pagos</h2>
-      <div class="search-bar">
-        <input type="text" id="searchPago" placeholder="🔍 Buscar por nombre o CI...">
-        <button id="exportPagosBtn" class="btn-warning">📎 Exportar Excel</button>
-      </div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>Estudiante</th><th>CI</th><th>Cuota</th><th>Monto (Bs)</th><th>Método</th><th>Recibo</th><th>Fecha/Hora</th><th>Acciones</th</thead>
-          </thead>
-          <tbody id="tablaPagos">
-            <tr><td colspan="8" style="text-align: center;">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
+        <!-- Registro de Pagos (Admin) -->
+        <div id="paymentsSection" class="card">
+            <div class="card-header">
+                <h2>💰 Registrar Pago de Cuota</h2>
+            </div>
+            <div class="form-grid">
+                <select id="paymentStudentSelect">
+                    <option value="">-- Seleccione Estudiante --</option>
+                </select>
+                <select id="paymentCuotaSelect">
+                    <option value="">-- Seleccione Cuota --</option>
+                </select>
+                <select id="paymentMethod">
+                    <option value="Efectivo">💵 Efectivo (Bs)</option>
+                    <option value="QR">📱 QR / Transferencia</option>
+                    <option value="Depósito">🏦 Depósito Bancario</option>
+                </select>
+                <input type="text" id="paymentReceipt" placeholder="N° Recibo / Comprobante">
+                <input type="number" id="paymentAmount" placeholder="Monto a pagar (Bs)" step="0.01">
+                <input type="datetime-local" id="paymentDatetime" step="1">
+                <button id="registerPaymentBtn" class="btn-info">💾 Registrar Pago</button>
+            </div>
+            <div id="paymentInfoPanel" style="margin-top: 1rem; padding: 0.8rem; background: #E9ECEF; border-radius: 0.5rem; display: none;"></div>
+        </div>
+
+        <!-- Historial de Pagos con opción de eliminar -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📄 Historial de Pagos</h2>
+                <button id="exportPaymentsBtn" class="btn-info btn-sm">📎 Exportar Excel</button>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="paymentSearch" placeholder="🔍 Buscar por nombre o CI...">
+            </div>
+            <div class="table-wrapper">
+                <table id="paymentsTable">
+                    <thead>
+                        <tr><th>Estudiante</th><th>CI</th><th>Cuota</th><th>Monto (Bs)</th><th>Método</th><th>Recibo</th><th>Fecha/Hora</th><th>Acciones</th</thead>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <tr><td colspan="8" class="text-center">Cargando pagos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- MODAL EDITAR ESTUDIANTE -->
-<div id="modalEditar" class="modal hidden">
-  <div class="modal-content">
-    <h3>✏️ Editar Estudiante</h3>
-    <input type="hidden" id="editId">
-    <div class="form-grid" style="grid-template-columns: 1fr;">
-      <input type="text" id="editNombre" placeholder="Nombre">
-      <input type="text" id="editApellido" placeholder="Apellido">
-      <input type="text" id="editCi" placeholder="CI">
-      <input type="text" id="editCelular" placeholder="Celular">
-      <select id="editSemestre"><option value="1">1er Semestre</option><option value="2">2do Semestre</option><option value="3">3er Semestre</option><option value="4">4to Semestre</option></select>
-      <select id="editTurno"><option value="Mañana">Mañana</option><option value="Tarde">Tarde</option><option value="Noche">Noche</option></select>
-      <input type="number" id="editMontoTotal" placeholder="Monto total del semestre (Bs)" step="0.01">
+<!-- Modal Editar Estudiante -->
+<div id="editStudentModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>✏️ Editar Estudiante</h3>
+        <input type="hidden" id="editStudentId">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+            <input type="text" id="editNombre" placeholder="Nombre">
+            <input type="text" id="editApellido" placeholder="Apellido">
+            <input type="text" id="editCi" placeholder="CI">
+            <input type="text" id="editCelular" placeholder="Celular">
+            <select id="editSemestre">
+                <option value="1">1er Semestre</option>
+                <option value="2">2do Semestre</option>
+                <option value="3">3er Semestre</option>
+                <option value="4">4to Semestre</option>
+            </select>
+            <select id="editTurno">
+                <option value="Mañana">Mañana</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noche">Noche</option>
+            </select>
+            <input type="number" id="editMontoTotal" placeholder="Monto total (Bs)" step="0.01">
+        </div>
+        <div class="modal-actions">
+            <button id="saveEditBtn" class="btn-info">💾 Guardar Cambios</button>
+            <button id="deleteStudentBtn" class="btn-danger">🗑️ Eliminar Estudiante</button>
+            <button id="cancelEditBtn">Cancelar</button>
+        </div>
     </div>
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-      <button id="guardarEdicion" class="btn-info">💾 Guardar Cambios</button>
-      <button id="btnEliminarEstudiante" class="btn-danger">🗑️ Eliminar Estudiante</button>
-      <button id="cancelarEdicion" style="background: #6c757d;">Cancelar</button>
-    </div>
-  </div>
 </div>
 
-<!-- MODAL CONFIRMAR ELIMINACIÓN -->
-<div id="modalConfirmar" class="modal hidden">
-  <div class="modal-content">
-    <h3>⚠️ Confirmar Eliminación</h3>
-    <p id="confirmarMensaje">¿Estás seguro de eliminar este registro?</p>
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-      <button id="confirmarSi" class="btn-danger">Sí, Eliminar</button>
-      <button id="confirmarNo" style="background: #6c757d;">Cancelar</button>
+<!-- Modal Confirmar Eliminación -->
+<div id="confirmModal" class="modal hidden">
+    <div class="modal-content">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="confirmMessage">¿Estás seguro de eliminar este registro?</p>
+        <div class="modal-actions">
+            <button id="confirmYesBtn" class="btn-danger">Sí, Eliminar</button>
+            <button id="confirmNoBtn">Cancelar</button>
+        </div>
     </div>
-  </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, query, where, orderBy, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, query, orderBy, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD1yXl0JdY7LQb3yNjLAUIFSCH5ve-CCrg",
-    authDomain: "registro-teslavi.firebaseapp.com",
-    projectId: "registro-teslavi",
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  let rolUsuario = "";
-  let estudiantesCache = [];
-  let pagosCache = [];
-  let accionEliminar = null;
-  let estudianteIdEliminar = null;
-  let pagoIdEliminar = null;
-
-  const showLoader = () => document.getElementById('loader').classList.remove('hidden');
-  const hideLoader = () => document.getElementById('loader').classList.add('hidden');
-  
-  const showToast = (mensaje, tipo = 'success') => {
-    const toast = document.createElement('div');
-    toast.className = `toast ${tipo}`;
-    toast.innerText = mensaje;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3500);
-  };
-
-  // LOGIN
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    showLoader();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      hideLoader();
-    } catch (err) {
-      hideLoader();
-      document.getElementById('errorLogin').innerText = "❌ " + err.message;
-    }
-  });
-
-  // VERIFICAR ROL
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      document.getElementById('loginBox').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
-      
-      try {
-        const userDocRef = doc(db, "usuarios", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          rolUsuario = userDoc.data().rol;
-        } else {
-          const q = query(collection(db, "usuarios"), where("email", "==", user.email));
-          const querySnap = await getDocs(q);
-          rolUsuario = !querySnap.empty ? querySnap.docs[0].data().rol : "visualizador";
-        }
-        
-        document.getElementById('rolBadge').innerHTML = rolUsuario === 'admin' ? '👑 Administrador' : '👁️ Visualizador';
-        
-        const adminSections = ['adminSection', 'pagosAdminSection'];
-        if (rolUsuario !== 'admin') {
-          adminSections.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-        } else {
-          adminSections.forEach(id => document.getElementById(id)?.classList.remove('hidden'));
-        }
-        
-        await cargarTodosLosDatos();
-        
-      } catch (error) {
-        console.error(error);
-        rolUsuario = "visualizador";
-      }
-    } else {
-      document.getElementById('loginBox').classList.remove('hidden');
-      document.getElementById('dashboard').classList.add('hidden');
-    }
-  });
-
-  window.logout = async () => { await signOut(auth); showToast("Sesión cerrada"); };
-
-  async function cargarTodosLosDatos() {
-    await cargarEstudiantes();
-    await cargarPagos();
-  }
-
-  // ==================== ESTUDIANTES ====================
-  async function cargarEstudiantes() {
-    try {
-      const snapshot = await getDocs(collection(db, "students"));
-      estudiantesCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), montoTotal: doc.data().montoTotal || 2000 }));
-      
-      // Calcular pagos por estudiante
-      const pagosPorEstudiante = {};
-      pagosCache.forEach(pago => {
-        if (!pagosPorEstudiante[pago.estudianteId]) pagosPorEstudiante[pago.estudianteId] = [];
-        pagosPorEstudiante[pago.estudianteId].push(pago);
-      });
-      
-      // Renderizar tabla
-      renderTablaEstudiantes(estudiantesCache, pagosPorEstudiante);
-      
-      // Actualizar select de pagos
-      const select = document.getElementById('studentSelectPago');
-      select.innerHTML = '<option value="">-- Seleccione Estudiante --</option>';
-      estudiantesCache.forEach(est => {
-        select.innerHTML += `<option value="${est.id}" data-monto="${est.montoTotal || 2000}">${est.nombre} ${est.apellido} - ${est.ci}</option>`;
-      });
-      
-    } catch (err) {
-      showToast("Error cargando estudiantes", "error");
-    }
-  }
-
-  function renderTablaEstudiantes(estudiantes, pagosPorEstudiante = {}) {
-    const tbody = document.getElementById('tablaEstudiantes');
-    if (!estudiantes.length) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No hay estudiantes registrados</td></tr>';
-      return;
-    }
-    
-    tbody.innerHTML = '';
-    estudiantes.forEach(est => {
-      const pagosEst = pagosPorEstudiante[est.id] || [];
-      const totalPagado = pagosEst.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const totalDebe = est.montoTotal || 2000;
-      const saldo = totalDebe - totalPagado;
-      
-      // Obtener cuotas pagadas (únicas)
-      const cuotasPagadas = [...new Set(pagosEst.map(p => p.cuota).filter(c => c && c !== 'Total'))];
-      const cuotas = ['Cuota 1', 'Cuota 2', 'Cuota 3', 'Cuota 4'];
-      
-      const row = tbody.insertRow();
-      row.insertCell(0).innerHTML = `<strong>${est.nombre} ${est.apellido}</strong>`;
-      row.insertCell(1).innerText = est.ci;
-      row.insertCell(2).innerText = est.celular || '-';
-      row.insertCell(3).innerText = `${est.semestre}°`;
-      row.insertCell(4).innerText = est.turno;
-      row.insertCell(5).innerHTML = `<strong>Bs ${totalDebe.toFixed(2)}</strong>`;
-      row.insertCell(6).innerHTML = `<span class="badge-success">Bs ${totalPagado.toFixed(2)}</span>`;
-      row.insertCell(7).innerHTML = saldo <= 0 ? '<span class="badge-success">✅ Pagado</span>' : `<span class="badge-warning">Bs ${saldo.toFixed(2)}</span>`;
-      
-      // Cuotas pagadas
-      let cuotasHtml = '';
-      cuotas.forEach(cuota => {
-        if (cuotasPagadas.includes(cuota)) {
-          cuotasHtml += `<span class="cuota-pagada">✅ ${cuota}</span> `;
-        } else {
-          cuotasHtml += `<span class="cuota-pendiente">⭕ ${cuota}</span> `;
-        }
-      });
-      row.insertCell(8).innerHTML = cuotasHtml || '-';
-      
-      row.insertCell(9).innerHTML = rolUsuario === 'admin' ? 
-        `<button onclick="abrirModalEditar('${est.id}')" style="padding: 4px 8px; font-size: 0.75rem;">✏️ Editar</button>` : '—';
-    });
-  }
-
-  // Abrir modal editar
-  window.abrirModalEditar = (id) => {
-    if (rolUsuario !== 'admin') return showToast("Sin permisos", "error");
-    const est = estudiantesCache.find(e => e.id === id);
-    if (!est) return;
-    
-    document.getElementById('editId').value = est.id;
-    document.getElementById('editNombre').value = est.nombre || '';
-    document.getElementById('editApellido').value = est.apellido || '';
-    document.getElementById('editCi').value = est.ci || '';
-    document.getElementById('editCelular').value = est.celular || '';
-    document.getElementById('editSemestre').value = est.semestre || '1';
-    document.getElementById('editTurno').value = est.turno || 'Mañana';
-    document.getElementById('editMontoTotal').value = est.montoTotal || 2000;
-    
-    document.getElementById('modalEditar').classList.remove('hidden');
-  };
-  
-  document.getElementById('guardarEdicion').onclick = async () => {
-    const id = document.getElementById('editId').value;
-    const data = {
-      nombre: document.getElementById('editNombre').value.trim(),
-      apellido: document.getElementById('editApellido').value.trim(),
-      ci: document.getElementById('editCi').value.trim(),
-      celular: document.getElementById('editCelular').value.trim(),
-      semestre: document.getElementById('editSemestre').value,
-      turno: document.getElementById('editTurno').value,
-      montoTotal: parseFloat(document.getElementById('editMontoTotal').value) || 2000
+    // Configuración Firebase (usar la misma que está activa)
+    const firebaseConfig = {
+        apiKey: "AIzaSyD1yXl0JdY7LQb3yNjLAUIFSCH5ve-CCrg",
+        authDomain: "registro-teslavi.firebaseapp.com",
+        projectId: "registro-teslavi",
     };
-    if (!data.nombre || !data.apellido || !data.ci) {
-      showToast("Complete nombre, apellido y CI", "error");
-      return;
-    }
-    showLoader();
-    try {
-      await updateDoc(doc(db, "students", id), data);
-      showToast("✅ Estudiante actualizado", "success");
-      document.getElementById('modalEditar').classList.add('hidden');
-      await cargarTodosLosDatos();
-    } catch (err) {
-      showToast("Error: " + err.message, "error");
-    } finally {
-      hideLoader();
-    }
-  };
-  
-  // Eliminar estudiante
-  document.getElementById('btnEliminarEstudiante').onclick = () => {
-    estudianteIdEliminar = document.getElementById('editId').value;
-    document.getElementById('confirmarMensaje').innerText = "¿Eliminar este estudiante y TODOS sus pagos asociados?";
-    document.getElementById('modalConfirmar').classList.remove('hidden');
-    accionEliminar = 'estudiante';
-  };
-  
-  // ==================== PAGOS ====================
-  async function cargarPagos() {
-    try {
-      const q = query(collection(db, "pagos"), orderBy("fecha", "desc"));
-      const snapshot = await getDocs(q);
-      pagosCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      renderTablaPagos(pagosCache);
-      
-      // Actualizar info de deuda al seleccionar estudiante
-      const selectEst = document.getElementById('studentSelectPago');
-      if (selectEst) {
-        selectEst.onchange = () => actualizarInfoDeuda();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  
-  function renderTablaPagos(pagos) {
-    const tbody = document.getElementById('tablaPagos');
-    if (!pagos.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay pagos registrados</td></tr>';
-      return;
-    }
-    tbody.innerHTML = '';
-    pagos.forEach(p => {
-      const fecha = p.fecha ? new Date(p.fecha.toDate()).toLocaleString('es-BO') : p.fechaStr || 'Fecha no disponible';
-      const row = tbody.insertRow();
-      row.insertCell(0).innerHTML = `<strong>${p.nombre}</strong>`;
-      row.insertCell(1).innerText = p.ci;
-      row.insertCell(2).innerText = p.cuota || '-';
-      row.insertCell(3).innerHTML = `<strong>Bs ${p.amount?.toFixed(2) || 0}</strong>`;
-      row.insertCell(4).innerText = p.method || '-';
-      row.insertCell(5).innerText = p.recibo || '-';
-      row.insertCell(6).innerText = fecha;
-      row.insertCell(7).innerHTML = rolUsuario === 'admin' ? 
-        `<button onclick="eliminarPago('${p.id}')" style="background:#DC3545; padding:4px 8px;">🗑️</button>` : '—';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Estado global
+    let currentUserRole = "visualizador";
+    let studentsList = [];      // todos los estudiantes
+    let paymentsList = [];      // todos los pagos
+
+    // Variables para eliminar
+    let pendingDeleteType = null; // 'student' o 'payment'
+    let pendingDeleteId = null;
+    let pendingStudentId = null;
+
+    // DOM Elements
+    const loader = document.getElementById('loader');
+    const showLoader = (msg = "Procesando...") => { loader.classList.remove('hidden'); };
+    const hideLoader = () => loader.classList.add('hidden');
+    
+    const showToast = (message, type = 'success') => {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
+    };
+
+    // ==================== LOGIN ====================
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        showLoader();
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            hideLoader();
+        } catch (error) {
+            hideLoader();
+            document.getElementById('loginError').innerText = "❌ " + error.message;
+            showToast("Error de autenticación", "error");
+        }
     });
-  }
-  
-  window.eliminarPago = (id) => {
-    pagoIdEliminar = id;
-    document.getElementById('confirmarMensaje').innerText = "¿Eliminar este registro de pago?";
-    document.getElementById('modalConfirmar').classList.remove('hidden');
-    accionEliminar = 'pago';
-  };
-  
-  function actualizarInfoDeuda() {
-    const estudianteId = document.getElementById('studentSelectPago').value;
-    if (!estudianteId) {
-      document.getElementById('infoDeuda').style.display = 'none';
-      document.getElementById('cuotaSelect').innerHTML = '<option value="">-- Seleccione Cuota --</option>';
-      return;
+
+    // ==================== AUTENTICACIÓN Y ROL ====================
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            document.getElementById('loginCard').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            try {
+                // Obtener rol desde Firestore usando UID o email
+                const userDocRef = doc(db, "usuarios", user.uid);
+                let userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    currentUserRole = userDoc.data().rol;
+                } else {
+                    // Fallback por email
+                    const q = query(collection(db, "usuarios"), where("email", "==", user.email));
+                    const snap = await getDocs(q);
+                    if (!snap.empty) {
+                        currentUserRole = snap.docs[0].data().rol;
+                        // Guardar con UID para futuro
+                        await setDoc(doc(db, "usuarios", user.uid), { email: user.email, rol: currentUserRole });
+                    } else {
+                        currentUserRole = "visualizador";
+                    }
+                }
+                
+                document.getElementById('roleBadge').innerHTML = currentUserRole === 'admin' ? '👑 Administrador' : '👁️ Visualizador';
+                
+                // Mostrar/ocultar secciones según rol
+                const adminElements = ['adminSection', 'paymentsSection'];
+                if (currentUserRole !== 'admin') {
+                    adminElements.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+                } else {
+                    adminElements.forEach(id => document.getElementById(id)?.classList.remove('hidden'));
+                }
+                
+                await loadAllData();
+            } catch (err) {
+                console.error(err);
+                showToast("Error cargando permisos", "error");
+                currentUserRole = "visualizador";
+            }
+        } else {
+            document.getElementById('loginCard').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            studentsList = [];
+            paymentsList = [];
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await signOut(auth);
+        showToast("Sesión cerrada correctamente", "success");
+    });
+
+    // Helper para setDoc
+    async function setDoc(docRef, data) {
+        const { setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        return setDoc(docRef, data);
+    }
+
+    // ==================== CARGA DE DATOS ====================
+    async function loadAllData() {
+        showLoader();
+        try {
+            const studentsSnap = await getDocs(collection(db, "students"));
+            studentsList = studentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), montoTotal: doc.data().montoTotal || 2000 }));
+            
+            const paymentsSnap = await getDocs(query(collection(db, "pagos"), orderBy("fecha", "desc")));
+            paymentsList = paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            renderStudentsTable();
+            renderPaymentsTable();
+            updateStudentSelect();
+        } catch (err) {
+            console.error(err);
+            showToast("Error al cargar datos", "error");
+        } finally {
+            hideLoader();
+        }
+    }
+
+    // ==================== RENDER ESTUDIANTES ====================
+    function renderStudentsTable(filterText = '') {
+        const tbody = document.getElementById('studentsTableBody');
+        if (!studentsList.length) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay estudiantes registrados</td></tr>';
+            return;
+        }
+        
+        let filtered = studentsList;
+        if (filterText) {
+            const term = filterText.toLowerCase();
+            filtered = studentsList.filter(s => 
+                `${s.nombre} ${s.apellido}`.toLowerCase().includes(term) ||
+                s.ci.toLowerCase().includes(term) ||
+                (s.celular && s.celular.toLowerCase().includes(term))
+            );
+        }
+        
+        // Agrupar pagos por estudiante
+        const paymentsByStudent = {};
+        paymentsList.forEach(p => {
+            if (p.estudianteId) {
+                if (!paymentsByStudent[p.estudianteId]) paymentsByStudent[p.estudianteId] = [];
+                paymentsByStudent[p.estudianteId].push(p);
+            }
+        });
+        
+        tbody.innerHTML = '';
+        filtered.forEach(est => {
+            const studentPayments = paymentsByStudent[est.id] || [];
+            const totalPaid = studentPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+            const totalDue = est.montoTotal || 2000;
+            const balance = totalDue - totalPaid;
+            
+            // Obtener cuotas pagadas únicas
+            const paidQuotas = [...new Set(studentPayments.map(p => p.cuota).filter(c => c && c !== 'Total'))];
+            const allQuotas = ['Cuota 1', 'Cuota 2', 'Cuota 3', 'Cuota 4'];
+            const quotasHtml = allQuotas.map(q => 
+                paidQuotas.includes(q) ? `<span class="badge-success">✅ ${q}</span>` : `<span class="badge-danger">⭕ ${q}</span>`
+            ).join(' ');
+            
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<strong>${est.nombre} ${est.apellido}</strong>`;
+            row.insertCell(1).innerText = est.ci;
+            row.insertCell(2).innerText = est.celular || '-';
+            row.insertCell(3).innerText = `${est.semestre}°`;
+            row.insertCell(4).innerText = est.turno;
+            row.insertCell(5).innerHTML = `Bs ${totalDue.toFixed(2)}`;
+            row.insertCell(6).innerHTML = `<span class="badge-success">Bs ${totalPaid.toFixed(2)}</span>`;
+            row.insertCell(7).innerHTML = balance <= 0 ? '<span class="badge-success">✅ Pagado</span>' : `<span class="badge-warning">Bs ${balance.toFixed(2)}</span>`;
+            row.insertCell(8).innerHTML = quotasHtml;
+            row.insertCell(9).innerHTML = (currentUserRole === 'admin') ? `<button class="btn-sm" onclick="openEditStudentModal('${est.id}')">✏️ Editar</button>` : '—';
+        });
     }
     
-    const estudiante = estudiantesCache.find(e => e.id === estudianteId);
-    if (!estudiante) return;
+    // ==================== RENDER PAGOS ====================
+    function renderPaymentsTable(filterText = '') {
+        const tbody = document.getElementById('paymentsTableBody');
+        let filtered = paymentsList;
+        if (filterText) {
+            const term = filterText.toLowerCase();
+            filtered = paymentsList.filter(p => p.nombre.toLowerCase().includes(term) || p.ci.includes(term));
+        }
+        
+        if (!filtered.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay pagos registrados</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        filtered.forEach(p => {
+            const fecha = p.fecha ? new Date(p.fecha.toDate()).toLocaleString('es-BO') : (p.fechaStr || 'Fecha no disponible');
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<strong>${p.nombre}</strong>`;
+            row.insertCell(1).innerText = p.ci;
+            row.insertCell(2).innerText = p.cuota || '-';
+            row.insertCell(3).innerHTML = `Bs ${(p.amount || 0).toFixed(2)}`;
+            row.insertCell(4).innerText = p.method || '-';
+            row.insertCell(5).innerText = p.recibo || '-';
+            row.insertCell(6).innerText = fecha;
+            row.insertCell(7).innerHTML = (currentUserRole === 'admin') ? `<button class="btn-sm btn-danger" onclick="openDeletePaymentModal('${p.id}')">🗑️</button>` : '—';
+        });
+    }
     
-    const pagosEst = pagosCache.filter(p => p.estudianteId === estudianteId);
-    const totalPagado = pagosEst.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const totalDebe = estudiante.montoTotal || 2000;
-    const saldo = totalDebe - totalPagado;
+    // ==================== SELECT ESTUDIANTE PARA PAGO ====================
+    function updateStudentSelect() {
+        const select = document.getElementById('paymentStudentSelect');
+        select.innerHTML = '<option value="">-- Seleccione Estudiante --</option>';
+        studentsList.forEach(est => {
+            select.innerHTML += `<option value="${est.id}" data-monto="${est.montoTotal || 2000}">${est.nombre} ${est.apellido} - ${est.ci}</option>`;
+        });
+        select.onchange = () => updatePaymentInfo();
+    }
     
-    document.getElementById('infoDeuda').style.display = 'block';
-    document.getElementById('infoDeuda').innerHTML = `
-      <strong>📊 ${estudiante.nombre} ${estudiante.apellido}</strong><br>
-      Total a pagar: Bs ${totalDebe.toFixed(2)} | Pagado: Bs ${totalPagado.toFixed(2)} | <strong>Saldo: Bs ${saldo.toFixed(2)}</strong>
-    `;
+    function updatePaymentInfo() {
+        const studentId = document.getElementById('paymentStudentSelect').value;
+        const panel = document.getElementById('paymentInfoPanel');
+        if (!studentId) {
+            panel.style.display = 'none';
+            document.getElementById('paymentCuotaSelect').innerHTML = '<option value="">-- Seleccione Cuota --</option>';
+            return;
+        }
+        
+        const student = studentsList.find(s => s.id === studentId);
+        if (!student) return;
+        
+        const studentPayments = paymentsList.filter(p => p.estudianteId === studentId);
+        const totalPaid = studentPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const totalDue = student.montoTotal || 2000;
+        const saldo = totalDue - totalPaid;
+        
+        panel.style.display = 'block';
+        panel.innerHTML = `
+            <strong>📊 ${student.nombre} ${student.apellido}</strong><br>
+            Total a pagar: Bs ${totalDue.toFixed(2)} | Pagado: Bs ${totalPaid.toFixed(2)} | <strong>Saldo: Bs ${saldo.toFixed(2)}</strong>
+            ${saldo <= 0 ? '<br><span class="badge-success">✅ Este estudiante ya canceló todas sus cuotas</span>' : ''}
+        `;
+        
+        // Obtener cuotas ya pagadas
+        const paidQuotas = new Set(studentPayments.map(p => p.cuota).filter(c => c && c !== 'Total'));
+        const allQuotas = ['Cuota 1', 'Cuota 2', 'Cuota 3', 'Cuota 4', 'Total'];
+        const availableQuotas = allQuotas.filter(q => !paidQuotas.has(q));
+        
+        const cuotaSelect = document.getElementById('paymentCuotaSelect');
+        cuotaSelect.innerHTML = '<option value="">-- Seleccione Cuota --</option>';
+        availableQuotas.forEach(q => {
+            cuotaSelect.innerHTML += `<option value="${q}">${q}</option>`;
+        });
+    }
     
-    // Filtrar cuotas no pagadas
-    const cuotasPagadas = [...new Set(pagosEst.map(p => p.cuota).filter(c => c && c !== 'Total'))];
-    const todasCuotas = ['Cuota 1', 'Cuota 2', 'Cuota 3', 'Cuota 4', 'Total'];
-    const cuotasDisponibles = todasCuotas.filter(c => !cuotasPagadas.includes(c));
-    
-    const cuotaSelect = document.getElementById('cuotaSelect');
-    cuotaSelect.innerHTML = '<option value="">-- Seleccione Cuota --</option>';
-    cuotasDisponibles.forEach(c => {
-      cuotaSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    // ==================== REGISTRAR PAGO ====================
+    document.getElementById('registerPaymentBtn').addEventListener('click', async () => {
+        if (currentUserRole !== 'admin') return showToast("Sin permisos", "error");
+        
+        const studentId = document.getElementById('paymentStudentSelect').value;
+        if (!studentId) { showToast("Seleccione un estudiante", "error"); return; }
+        
+        const cuota = document.getElementById('paymentCuotaSelect').value;
+        if (!cuota) { showToast("Seleccione una cuota", "error"); return; }
+        
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        if (isNaN(amount) || amount <= 0) { showToast("Ingrese un monto válido", "error"); return; }
+        
+        const student = studentsList.find(s => s.id === studentId);
+        if (!student) return;
+        
+        let fechaPago = document.getElementById('paymentDatetime').value;
+        let fechaTimestamp;
+        if (fechaPago) {
+            fechaTimestamp = Timestamp.fromDate(new Date(fechaPago));
+        } else {
+            fechaTimestamp = Timestamp.now();
+        }
+        
+        showLoader();
+        try {
+            await addDoc(collection(db, "pagos"), {
+                nombre: `${student.nombre} ${student.apellido}`,
+                ci: student.ci,
+                cuota: cuota,
+                amount: amount,
+                method: document.getElementById('paymentMethod').value,
+                recibo: document.getElementById('paymentReceipt').value.trim() || "S/N",
+                fecha: fechaTimestamp,
+                estudianteId: studentId
+            });
+            showToast(`💰 Pago de ${cuota} registrado correctamente`, "success");
+            // Limpiar campos
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentReceipt').value = '';
+            await loadAllData();
+        } catch (err) {
+            showToast("Error: " + err.message, "error");
+        } finally {
+            hideLoader();
+        }
     });
     
-    // Si el saldo es 0, mostrar mensaje
-    if (saldo <= 0) {
-      document.getElementById('infoDeuda').innerHTML += '<br><span style="color: green;">✅ Este estudiante ya pagó todas sus cuotas</span>';
-    }
-  }
-  
-  // Registrar pago con fecha y hora
-  document.getElementById('btnGuardarPago').onclick = async () => {
-    if (rolUsuario !== 'admin') return showToast("Sin permisos", "error");
+    // ==================== EDITAR Y ELIMINAR ESTUDIANTE ====================
+    window.openEditStudentModal = (studentId) => {
+        if (currentUserRole !== 'admin') return;
+        const student = studentsList.find(s => s.id === studentId);
+        if (!student) return;
+        
+        document.getElementById('editStudentId').value = student.id;
+        document.getElementById('editNombre').value = student.nombre || '';
+        document.getElementById('editApellido').value = student.apellido || '';
+        document.getElementById('editCi').value = student.ci || '';
+        document.getElementById('editCelular').value = student.celular || '';
+        document.getElementById('editSemestre').value = student.semestre || '1';
+        document.getElementById('editTurno').value = student.turno || 'Mañana';
+        document.getElementById('editMontoTotal').value = student.montoTotal || 2000;
+        
+        document.getElementById('editStudentModal').classList.remove('hidden');
+    };
     
-    const estudianteId = document.getElementById('studentSelectPago').value;
-    if (!estudianteId) { showToast("Seleccione un estudiante", "error"); return; }
-    
-    const cuota = document.getElementById('cuotaSelect').value;
-    if (!cuota) { showToast("Seleccione una cuota", "error"); return; }
-    
-    const amount = parseFloat(document.getElementById('montoPago').value);
-    if (isNaN(amount) || amount <= 0) { showToast("Ingrese un monto válido", "error"); return; }
-    
-    const estudiante = estudiantesCache.find(e => e.id === estudianteId);
-    if (!estudiante) return;
-    
-    let fechaPago = document.getElementById('fechaPago').value;
-    let fechaTimestamp;
-    if (fechaPago) {
-      fechaTimestamp = Timestamp.fromDate(new Date(fechaPago));
-    } else {
-      fechaTimestamp = Timestamp.now();
-    }
-    
-    showLoader();
-    try {
-      await addDoc(collection(db, "pagos"), {
-        nombre: `${estudiante.nombre} ${estudiante.apellido}`,
-        ci: estudiante.ci,
-        cuota: cuota,
-        amount: amount,
-        method: document.getElementById('method').value,
-        recibo: document.getElementById('recibo').value.trim() || "S/N",
-        fecha: fechaTimestamp,
-        estudianteId: estudianteId
-      });
-      
-      showToast(`💰 Pago de ${cuota} registrado`, "success");
-      document.getElementById('montoPago').value = '';
-      document.getElementById('recibo').value = '';
-      document.getElementById('fechaPago').value = '';
-      document.getElementById('studentSelectPago').value = '';
-      document.getElementById('infoDeuda').style.display = 'none';
-      
-      await cargarTodosLosDatos();
-    } catch (err) {
-      showToast("Error: " + err.message, "error");
-    } finally {
-      hideLoader();
-    }
-  };
-  
-  // ==================== ELIMINAR ====================
-  document.getElementById('confirmarSi').onclick = async () => {
-    document.getElementById('modalConfirmar').classList.add('hidden');
-    showLoader();
-    try {
-      if (accionEliminar === 'estudiante' && estudianteIdEliminar) {
-        // Eliminar todos los pagos del estudiante
-        const pagosAEliminar = pagosCache.filter(p => p.estudianteId === estudianteIdEliminar);
-        const batch = writeBatch(db);
-        pagosAEliminar.forEach(p => batch.delete(doc(db, "pagos", p.id)));
-        batch.delete(doc(db, "students", estudianteIdEliminar));
-        await batch.commit();
-        showToast("✅ Estudiante y sus pagos eliminados", "success");
-        document.getElementById('modalEditar').classList.add('hidden');
-      }
-      else if (accionEliminar === 'pago' && pagoIdEliminar) {
-        await deleteDoc(doc(db, "pagos", pagoIdEliminar));
-        showToast("✅ Pago eliminado", "success");
-      }
-      await cargarTodosLosDatos();
-    } catch (err) {
-      showToast("Error al eliminar: " + err.message, "error");
-    } finally {
-      hideLoader();
-      accionEliminar = null;
-      estudianteIdEliminar = null;
-      pagoIdEliminar = null;
-    }
-  };
-  
-  document.getElementById('confirmarNo').onclick = () => {
-    document.getElementById('modalConfirmar').classList.add('hidden');
-    accionEliminar = null;
-  };
-  
-  document.getElementById('cancelarEdicion').onclick = () => {
-    document.getElementById('modalEditar').classList.add('hidden');
-  };
-  
-  // ==================== GUARDAR ESTUDIANTE ====================
-  document.getElementById('btnGuardarEstudiante').onclick = async () => {
-    if (rolUsuario !== 'admin') return showToast("Sin permisos", "error");
-    
-    const nombre = document.getElementById('nombre').value.trim();
-    const apellido = document.getElementById('apellido').value.trim();
-    const ci = document.getElementById('ci').value.trim();
-    const celular = document.getElementById('celular').value.trim();
-    const semestre = document.getElementById('semestre').value;
-    const turno = document.getElementById('turno').value;
-    const montoTotal = parseFloat(document.getElementById('montoTotal').value) || 2000;
-    
-    if (!nombre || !apellido || !ci) {
-      showToast("Complete nombre, apellido y CI", "error");
-      return;
-    }
-    
-    showLoader();
-    try {
-      await addDoc(collection(db, "students"), {
-        nombre, apellido, ci, celular, semestre, turno, montoTotal,
-        creado: Timestamp.now()
-      });
-      showToast("✅ Estudiante registrado", "success");
-      document.getElementById('studentForm').reset();
-      document.getElementById('montoTotal').value = '';
-      await cargarTodosLosDatos();
-    } catch (err) {
-      showToast("Error: " + err.message, "error");
-    } finally {
-      hideLoader();
-    }
-  };
-  
-  // ==================== BUSCADOR GLOBAL ====================
-  const buscador = document.getElementById('buscadorGlobal');
-  buscador.addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    const filtrados = estudiantesCache.filter(est => 
-      `${est.nombre} ${est.apellido}`.toLowerCase().includes(term) ||
-      est.ci.toLowerCase().includes(term) ||
-      (est.celular && est.celular.toLowerCase().includes(term))
-    );
-    
-    const pagosPorEstudiante = {};
-    pagosCache.forEach(pago => {
-      if (!pagosPorEstudiante[pago.estudianteId]) pagosPorEstudiante[pago.estudianteId] = [];
-      pagosPorEstudiante[pago.estudianteId].push(pago);
+    document.getElementById('saveEditBtn').addEventListener('click', async () => {
+        const id = document.getElementById('editStudentId').value;
+        const updatedData = {
+            nombre: document.getElementById('editNombre').value.trim(),
+            apellido: document.getElementById('editApellido').value.trim(),
+            ci: document.getElementById('editCi').value.trim(),
+            celular: document.getElementById('editCelular').value.trim(),
+            semestre: document.getElementById('editSemestre').value,
+            turno: document.getElementById('editTurno').value,
+            montoTotal: parseFloat(document.getElementById('editMontoTotal').value) || 2000
+        };
+        if (!updatedData.nombre || !updatedData.apellido || !updatedData.ci) {
+            showToast("Nombre, apellido y CI son obligatorios", "error");
+            return;
+        }
+        showLoader();
+        try {
+            await updateDoc(doc(db, "students", id), updatedData);
+            showToast("✅ Estudiante actualizado", "success");
+            document.getElementById('editStudentModal').classList.add('hidden');
+            await loadAllData();
+        } catch (err) {
+            showToast("Error: " + err.message, "error");
+        } finally {
+            hideLoader();
+        }
     });
-    renderTablaEstudiantes(filtrados, pagosPorEstudiante);
-  });
-  
-  document.getElementById('btnLimpiarBusqueda').onclick = () => {
-    buscador.value = '';
-    const pagosPorEstudiante = {};
-    pagosCache.forEach(pago => {
-      if (!pagosPorEstudiante[pago.estudianteId]) pagosPorEstudiante[pago.estudianteId] = [];
-      pagosPorEstudiante[pago.estudianteId].push(pago);
+    
+    document.getElementById('deleteStudentBtn').addEventListener('click', () => {
+        const studentId = document.getElementById('editStudentId').value;
+        const student = studentsList.find(s => s.id === studentId);
+        if (!student) return;
+        pendingDeleteType = 'student';
+        pendingDeleteId = studentId;
+        document.getElementById('confirmMessage').innerText = `¿Eliminar al estudiante "${student.nombre} ${student.apellido}" y todos sus pagos?`;
+        document.getElementById('confirmModal').classList.remove('hidden');
+        document.getElementById('editStudentModal').classList.add('hidden');
     });
-    renderTablaEstudiantes(estudiantesCache, pagosPorEstudiante);
-  };
-  
-  // Buscador de pagos
-  document.getElementById('searchPago').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    const filtrados = pagosCache.filter(p => 
-      p.nombre.toLowerCase().includes(term) || p.ci.includes(term)
-    );
-    renderTablaPagos(filtrados);
-  });
-  
-  // Exportar Excel
-  document.getElementById('exportPagosBtn').onclick = () => {
-    const data = pagosCache.map(p => ({
-      'Estudiante': p.nombre,
-      'CI': p.ci,
-      'Cuota': p.cuota,
-      'Monto (Bs)': p.amount,
-      'Método': p.method,
-      'Recibo': p.recibo,
-      'Fecha': p.fecha ? p.fecha.toDate().toLocaleString('es-BO') : ''
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Pagos TESLAVI');
-    XLSX.writeFile(wb, `Pagos_TESLAVI_${new Date().toISOString().slice(0,19)}.xlsx`);
-    showToast("Excel exportado", "success");
-  };
-  
-  // Inicializar fecha actual en el campo datetime-local
-  const ahora = new Date();
-  ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-  document.getElementById('fechaPago').value = ahora.toISOString().slice(0, 16);
-  
-  console.log("✅ Sistema TESLAVI Completo cargado");
+    
+    // ==================== ELIMINAR PAGO ====================
+    window.openDeletePaymentModal = (paymentId) => {
+        const payment = paymentsList.find(p => p.id === paymentId);
+        if (!payment) return;
+        pendingDeleteType = 'payment';
+        pendingDeleteId = paymentId;
+        document.getElementById('confirmMessage').innerText = `¿Eliminar pago de ${payment.cuota} por Bs ${payment.amount} de ${payment.nombre}?`;
+        document.getElementById('confirmModal').classList.remove('hidden');
+    };
+    
+    document.getElementById('confirmYesBtn').addEventListener('click', async () => {
+        document.getElementById('confirmModal').classList.add('hidden');
+        showLoader();
+        try {
+            if (pendingDeleteType === 'student' && pendingDeleteId) {
+                // Eliminar estudiante y todos sus pagos asociados
+                const relatedPayments = paymentsList.filter(p => p.estudianteId === pendingDeleteId);
+                const batch = writeBatch(db);
+                relatedPayments.forEach(p => batch.delete(doc(db, "pagos", p.id)));
+                batch.delete(doc(db, "students", pendingDeleteId));
+                await batch.commit();
+                showToast("✅ Estudiante y sus pagos eliminados", "success");
+            } else if (pendingDeleteType === 'payment' && pendingDeleteId) {
+                await deleteDoc(doc(db, "pagos", pendingDeleteId));
+                showToast("✅ Pago eliminado", "success");
+            }
+            await loadAllData();
+        } catch (err) {
+            showToast("Error al eliminar: " + err.message, "error");
+        } finally {
+            hideLoader();
+            pendingDeleteType = null;
+            pendingDeleteId = null;
+        }
+    });
+    
+    document.getElementById('confirmNoBtn').addEventListener('click', () => {
+        document.getElementById('confirmModal').classList.add('hidden');
+        pendingDeleteType = null;
+        pendingDeleteId = null;
+    });
+    
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        document.getElementById('editStudentModal').classList.add('hidden');
+    });
+    
+    // ==================== GUARDAR ESTUDIANTE ====================
+    document.getElementById('saveStudentBtn').addEventListener('click', async () => {
+        if (currentUserRole !== 'admin') return showToast("Sin permisos", "error");
+        
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido = document.getElementById('apellido').value.trim();
+        const ci = document.getElementById('ci').value.trim();
+        const celular = document.getElementById('celular').value.trim();
+        const semestre = document.getElementById('semestre').value;
+        const turno = document.getElementById('turno').value;
+        const montoTotal = parseFloat(document.getElementById('montoTotal').value) || 2000;
+        
+        if (!nombre || !apellido || !ci) {
+            showToast("Complete nombre, apellido y CI", "error");
+            return;
+        }
+        
+        showLoader();
+        try {
+            await addDoc(collection(db, "students"), {
+                nombre, apellido, ci, celular, semestre, turno, montoTotal,
+                creado: Timestamp.now()
+            });
+            showToast("✅ Estudiante registrado", "success");
+            // Limpiar formulario
+            document.getElementById('nombre').value = '';
+            document.getElementById('apellido').value = '';
+            document.getElementById('ci').value = '';
+            document.getElementById('celular').value = '';
+            document.getElementById('montoTotal').value = '2000';
+            await loadAllData();
+        } catch (err) {
+            showToast("Error: " + err.message, "error");
+        } finally {
+            hideLoader();
+        }
+    });
+    
+    // ==================== BUSCADORES ====================
+    const globalSearch = document.getElementById('globalSearch');
+    globalSearch.addEventListener('input', (e) => {
+        renderStudentsTable(e.target.value);
+    });
+    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+        globalSearch.value = '';
+        renderStudentsTable('');
+    });
+    
+    const paymentSearch = document.getElementById('paymentSearch');
+    paymentSearch.addEventListener('input', (e) => {
+        renderPaymentsTable(e.target.value);
+    });
+    
+    // ==================== EXPORTAR EXCEL ====================
+    document.getElementById('exportStudentsBtn').addEventListener('click', () => {
+        const data = studentsList.map(s => ({
+            'Nombre Completo': `${s.nombre} ${s.apellido}`,
+            'CI': s.ci,
+            'Celular': s.celular || '',
+            'Semestre': `${s.semestre}°`,
+            'Turno': s.turno,
+            'Monto Total (Bs)': s.montoTotal || 2000,
+            'Estado': 'Activo'
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes TESLAVI');
+        XLSX.writeFile(wb, `Estudiantes_TESLAVI_${new Date().toISOString().slice(0,19)}.xlsx`);
+        showToast("Excel de estudiantes exportado", "success");
+    });
+    
+    document.getElementById('exportPaymentsBtn').addEventListener('click', () => {
+        const data = paymentsList.map(p => ({
+            'Estudiante': p.nombre,
+            'CI': p.ci,
+            'Cuota': p.cuota,
+            'Monto (Bs)': p.amount,
+            'Método': p.method,
+            'Recibo': p.recibo,
+            'Fecha': p.fecha ? p.fecha.toDate().toLocaleString('es-BO') : ''
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Pagos TESLAVI');
+        XLSX.writeFile(wb, `Pagos_TESLAVI_${new Date().toISOString().slice(0,19)}.xlsx`);
+        showToast("Excel de pagos exportado", "success");
+    });
+    
+    // Inicializar fecha/hora actual en campo datetime
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('paymentDatetime').value = now.toISOString().slice(0, 16);
+    
+    console.log("✅ Sistema TESLAVI completamente funcional");
 </script>
 </body>
 </html>
